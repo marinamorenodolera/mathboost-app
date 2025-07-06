@@ -44,62 +44,64 @@ const MathBoost = () => {
     { level: 15, name: 'Dios Matemático', category: 'Maestro', weeklyProblemsMin: 1500, weeklyProblemsMax: 2000, speedTarget: 1.2, emoji: '🌟' }
   ];
 
+  // Sistema de notificaciones por usuario
+  const [notificationTimeouts, setNotificationTimeouts] = useState({});
+
   // Sistema de usuarios mejorado
   const [users, setUsers] = useState({
     marina: {
       name: 'marina',
       avatar: '👩‍💻',
-      currentLevel: 12,
-      sessionsThisWeek: 4,
-      sessionsLastWeek: 2,
-      averageResponseTime: 2.1,
-      lastWeekResponseTime: 3.4,
-      totalProblemsThisWeek: 1247,
-      totalProblemsLastWeek: 890,
-      totalProblemsLifetime: 28472,
-      totalHoursInvested: 147.5,
-      nextLevelProblems: 150,
-      currentStreak: 7,
-      bestStreak: 23,
-      consecutiveDays: 12,
-      bestTable: 7,
-      weakestTable: 8,
-      averageUserSpeed: 3.2,
-      globalRanking: 15,
-      commonMistakes: {
-        'tabla_8': { errors: 12, total: 45, percentage: 26.7 },
-        'carry_operations': { errors: 8, total: 67, percentage: 11.9 },
-        'speed_pressure': { errors: 15, total: 120, percentage: 12.5 }
-      },
-      strengths: ['Tablas del 2, 3, 7', 'Cálculos bajo presión', 'Patrones numéricos'],
-      weaknesses: ['Tabla del 8', 'Números grandes', 'Operaciones con llevada'],
-      projectionWeeks: 3,
-      projectionText: 'Ninja Matemático completo',
+      currentLevel: 1,
+      sessionsThisWeek: 0,
+      sessionsLastWeek: 0,
+      averageResponseTime: 0,
+      lastWeekResponseTime: 0,
+      totalProblemsThisWeek: 0,
+      totalProblemsLastWeek: 0,
+      totalProblemsLifetime: 0,
+      totalHoursInvested: 0,
+      nextLevelProblems: 50,
+      currentStreak: 0,
+      bestStreak: 0,
+      consecutiveDays: 0,
+      bestTable: null,
+      weakestTable: null,
+      averageUserSpeed: 0,
+      globalRanking: null,
+      commonMistakes: {},
+      strengths: [],
+      weaknesses: [],
+      projectionWeeks: 12,
+      projectionText: 'calculadora mental básica',
       nextAchievement: {
-        name: 'Velocista Mental',
-        description: 'Responde 10 problemas en menos de 2s',
-        progress: 7,
-        total: 10,
-        emoji: '🏃‍♀️'
+        name: 'Primer Paso',
+        description: 'Completa tu primera sesión de entrenamiento',
+        progress: 0,
+        total: 1,
+        emoji: '🌱'
       },
       practiceHeatmap: [
-        [0, 1, 2, 0, 1, 0, 1],
-        [2, 0, 1, 1, 0, 2, 1],
-        [1, 1, 0, 2, 1, 1, 0],
-        [2, 1, 2, 1, 2, 0, 1]
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0]
       ],
       activityPatterns: {
-        bestDays: ['Martes', 'Jueves', 'Domingo'],
-        bestHours: ['8:00-9:00', '14:00-15:00', '20:00-21:00'],
-        avgSessionLength: '12 min',
-        preferredDifficulty: 'Intermedio'
+        bestDays: [],
+        bestHours: [],
+        avgSessionLength: '0 min',
+        preferredDifficulty: 'Principiante'
       },
-      personalProfile: `Marina es una calculadora mental de élite con preferencia por sesiones cortas pero intensas. 
-      Destaca especialmente en las tablas primarias (2, 3, 7) y muestra gran resistencia bajo presión temporal. 
-      Su principal área de mejora se centra en la tabla del 8 y operaciones con números de múltiples dígitos. 
-      Practica de forma muy consistente, especialmente los martes y jueves por la mañana.`,
+      personalProfile: `Marina está comenzando su viaje en el cálculo mental. Como nueva usuaria, tiene un gran potencial de crecimiento y mejora. ¡Es el momento perfecto para establecer buenos hábitos de práctica y descubrir sus fortalezas naturales en matemáticas!`,
       lastNotification: null,
-      createdAt: Date.now() - 30 * 24 * 60 * 60 * 1000
+      createdAt: Date.now() - 30 * 24 * 60 * 60 * 1000,
+      notificationPreferences: {
+        enabled: true,
+        frequency: 'daily', // daily, weekly, never
+        bestTime: '18:00',
+        motivationStyle: 'encouraging' // encouraging, challenging, casual
+      }
     },
     pieter: {
       name: 'pieter',
@@ -147,7 +149,13 @@ const MathBoost = () => {
       },
       personalProfile: `Pieter está comenzando su viaje en el cálculo mental. Como nuevo usuario, tiene un gran potencial de crecimiento y mejora. ¡Es el momento perfecto para establecer buenos hábitos de práctica y descubrir sus fortalezas naturales en matemáticas!`,
       lastNotification: null,
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      notificationPreferences: {
+        enabled: true,
+        frequency: 'daily',
+        bestTime: '19:00',
+        motivationStyle: 'professional' // encouraging, challenging, casual, professional
+      }
     }
   });
 
@@ -251,13 +259,108 @@ const MathBoost = () => {
     secondaryLight: '#EDE9FE'
   };
 
-  // Estilo liquid glass
+  // Sistema tipográfico consistente
+  const typography = {
+    // Escala de tamaños (mobile-first)
+    sizes: {
+      xs: 'text-xs',      // 12px
+      sm: 'text-sm',      // 14px
+      base: 'text-base',  // 16px
+      lg: 'text-lg',      // 18px
+      xl: 'text-xl',      // 20px
+      '2xl': 'text-2xl',  // 24px
+      '3xl': 'text-3xl',  // 30px
+      '4xl': 'text-4xl',  // 36px
+      '5xl': 'text-5xl',  // 48px
+      '6xl': 'text-6xl',  // 60px
+      '7xl': 'text-7xl',  // 72px
+      '8xl': 'text-8xl',  // 96px
+      '9xl': 'text-9xl'   // 128px
+    },
+    
+    // Escala responsiva para operaciones matemáticas
+    math: {
+      mobile: 'text-6xl',    // 60px
+      tablet: 'text-7xl',    // 72px
+      desktop: 'text-8xl'    // 96px
+    },
+    
+    // Escala responsiva para respuestas
+    answer: {
+      mobile: 'text-6xl',    // 60px
+      tablet: 'text-7xl',    // 72px
+      desktop: 'text-8xl'    // 96px
+    },
+    
+    // Escala responsiva para títulos principales
+    h1: {
+      mobile: 'text-2xl',    // 24px
+      tablet: 'text-3xl',    // 30px
+      desktop: 'text-4xl'    // 36px
+    },
+    
+    // Escala responsiva para subtítulos
+    h2: {
+      mobile: 'text-xl',     // 20px
+      tablet: 'text-2xl',    // 24px
+      desktop: 'text-3xl'    // 30px
+    },
+    
+    // Escala responsiva para títulos de sección
+    h3: {
+      mobile: 'text-lg',     // 18px
+      tablet: 'text-xl',     // 20px
+      desktop: 'text-2xl'    // 24px
+    },
+    
+    // Escala responsiva para títulos de tarjetas
+    cardTitle: {
+      mobile: 'text-base',   // 16px
+      tablet: 'text-lg',     // 18px
+      desktop: 'text-xl'     // 20px
+    },
+    
+    // Escala responsiva para texto de cuerpo
+    body: {
+      mobile: 'text-sm',     // 14px
+      tablet: 'text-base',   // 16px
+      desktop: 'text-lg'     // 18px
+    },
+    
+    // Escala responsiva para texto secundario
+    caption: {
+      mobile: 'text-xs',     // 12px
+      tablet: 'text-sm',     // 14px
+      desktop: 'text-base'   // 16px
+    },
+    
+    // Escala responsiva para navegación
+    nav: {
+      mobile: 'text-sm',     // 14px
+      tablet: 'text-base',   // 16px
+      desktop: 'text-lg'     // 18px
+    },
+    
+    // Escala responsiva para botones
+    button: {
+      mobile: 'text-sm',     // 14px
+      tablet: 'text-base',   // 16px
+      desktop: 'text-lg'     // 18px
+    }
+  };
+
+  // Función helper para obtener tamaño tipográfico responsivo
+  const getTypeSize = (scale, screenSize) => {
+    return typography[scale]?.[screenSize] || typography[scale]?.mobile || 'text-base';
+  };
+
+  // Estilo liquid glass - Consistent across all screens
   const liquidGlass = {
     background: 'rgba(255, 255, 255, 0.85)',
     backdropFilter: 'blur(12px) saturate(200%)',
     border: `1px solid ${colors.border}`,
     boxShadow: `0 8px 32px ${colors.shadow}, 0 1px 0 rgba(255, 255, 255, 0.5) inset`,
-    borderRadius: '16px'
+    borderRadius: '24px'
   };
 
   const liquidGlassHover = {
@@ -265,8 +368,37 @@ const MathBoost = () => {
     backdropFilter: 'blur(16px) saturate(220%)',
     border: `1px solid ${colors.primary}20`,
     boxShadow: `0 12px 48px ${colors.shadowRich}, 0 1px 0 rgba(255, 255, 255, 0.7) inset`,
-    borderRadius: '18px'
+    borderRadius: '24px'
   };
+
+  // Consistent card styling helper
+  const cardStyle = {
+    ...liquidGlass,
+    transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+    cursor: 'pointer'
+  };
+
+  const cardStyleHover = {
+    ...liquidGlassHover,
+    transform: 'scale(1.02)',
+    transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
+  };
+
+  const cardStyleActive = {
+    ...liquidGlass,
+    transform: 'scale(0.98)',
+    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+  };
+
+  // Helper function for consistent card styling
+  const getCardProps = () => ({
+    className: 'rounded-3xl transition-all duration-500 hover:scale-102 active:scale-98',
+    style: cardStyle,
+    onMouseEnter: (e) => Object.assign(e.target.style, cardStyleHover),
+    onMouseLeave: (e) => Object.assign(e.target.style, cardStyle),
+    onMouseDown: (e) => Object.assign(e.target.style, cardStyleActive),
+    onMouseUp: (e) => Object.assign(e.target.style, cardStyleHover)
+  });
 
   // Responsive
   const [screenSize, setScreenSize] = useState('desktop');
@@ -289,25 +421,79 @@ const MathBoost = () => {
 
   const responsive = {
     mobile: {
-      logoSize: 'text-5xl',
+      logoSize: 'text-4xl',
       padding: 'p-4',
       headerPadding: 'p-4',
-      gridCols: 'grid-cols-1',
-      cardPadding: 'p-6'
+      gridCols: 'grid-cols-2',
+      cardPadding: 'p-4',
+      gap: 'gap-4',
+      gamePadding: 'p-4 pb-24',
+      headerCompact: true,
+      gameSpacing: 'space-y-8',
+      problemSize: getTypeSize('math', 'mobile'),
+      answerSize: getTypeSize('answer', 'mobile'),
+      h1: getTypeSize('h1', 'mobile'),
+      h2: getTypeSize('h2', 'mobile'),
+      h3: getTypeSize('h3', 'mobile'),
+      cardTitle: getTypeSize('cardTitle', 'mobile'),
+      body: getTypeSize('body', 'mobile'),
+      caption: getTypeSize('caption', 'mobile'),
+      nav: getTypeSize('nav', 'mobile'),
+      button: getTypeSize('button', 'mobile'),
+      // Carousel configuration
+      carouselCards: 3,
+      carouselGap: 'gap-4',
+      carouselPadding: 'px-4'
     },
     tablet: {
       logoSize: 'text-6xl',
       padding: 'p-6',
       headerPadding: 'p-5',
       gridCols: 'grid-cols-2',
-      cardPadding: 'p-8'
+      cardPadding: 'p-6',
+      gap: 'gap-6',
+      gamePadding: 'p-6 pb-28',
+      headerCompact: false,
+      gameSpacing: 'space-y-12',
+      problemSize: getTypeSize('math', 'tablet'),
+      answerSize: getTypeSize('answer', 'tablet'),
+      h1: getTypeSize('h1', 'tablet'),
+      h2: getTypeSize('h2', 'tablet'),
+      h3: getTypeSize('h3', 'tablet'),
+      cardTitle: getTypeSize('cardTitle', 'tablet'),
+      body: getTypeSize('body', 'tablet'),
+      caption: getTypeSize('caption', 'tablet'),
+      nav: getTypeSize('nav', 'tablet'),
+      button: getTypeSize('button', 'tablet'),
+      // Carousel configuration
+      carouselCards: 5,
+      carouselGap: 'gap-6',
+      carouselPadding: 'px-6'
     },
     desktop: {
       logoSize: 'text-7xl',
       padding: 'p-8',
       headerPadding: 'p-6',
-      gridCols: 'grid-cols-3',
-      cardPadding: 'p-10'
+      gridCols: 'grid-cols-2',
+      cardPadding: 'p-8',
+      gap: 'gap-8',
+      gamePadding: 'p-8',
+      headerCompact: false,
+      gameSpacing: 'space-y-16',
+      problemSize: getTypeSize('math', 'desktop'),
+      answerSize: getTypeSize('answer', 'desktop'),
+      h1: getTypeSize('h1', 'desktop'),
+      h2: getTypeSize('h2', 'desktop'),
+      h3: getTypeSize('h3', 'desktop'),
+      cardTitle: getTypeSize('cardTitle', 'desktop'),
+      body: getTypeSize('body', 'desktop'),
+      caption: getTypeSize('caption', 'desktop'),
+      nav: getTypeSize('nav', 'desktop'),
+      button: getTypeSize('button', 'desktop'),
+      // Carousel configuration
+      carouselCards: 7,
+      carouselGap: 'gap-8',
+      carouselPadding: 'px-8'
     }
   };
 
@@ -319,7 +505,7 @@ const MathBoost = () => {
   const getWeeklyProblemsGoal = (user) => getUserLevelData(user)?.weeklyProblemsMax || 0;
   const getWeeklySpeedGoal = (user) => getUserLevelData(user)?.speedTarget || 0;
 
-  // Gestión de usuarios
+  // Gestión de usuarios actualizada
   const createNewProfile = () => {
     if (!newProfileName.trim()) return;
     
@@ -370,7 +556,13 @@ const MathBoost = () => {
       },
       personalProfile: `${newProfileName} está comenzando su viaje en el cálculo mental. Como nuevo usuario, tiene un gran potencial de crecimiento y mejora. ¡Es el momento perfecto para establecer buenos hábitos de práctica y descubrir sus fortalezas naturales en matemáticas!`,
       lastNotification: null,
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      notificationPreferences: {
+        enabled: true,
+        frequency: 'daily',
+        bestTime: '18:00',
+        motivationStyle: 'encouraging'
+      }
     };
 
     setUsers(prev => ({ ...prev, [userId]: newUser }));
@@ -380,10 +572,10 @@ const MathBoost = () => {
     setNewProfileName('');
     setNewProfileEmoji('👤');
     
-    scheduleNotification(newUser);
+    scheduleUserNotifications(newUser);
   };
 
-  // Sistema de notificaciones
+  // Sistema de notificaciones por usuario mejorado
   const requestNotificationPermission = async () => {
     if ('Notification' in window) {
       const permission = await Notification.requestPermission();
@@ -392,47 +584,141 @@ const MathBoost = () => {
     return false;
   };
 
-  const getMotivationalMessage = (user) => {
-    const messages = [
-      `¡Hora de brillar, ${user.name}! 🌟 ¿Te atreves con la tabla del ${Math.floor(Math.random() * 8) + 2} hoy?`,
-      `${user.avatar} ¡5 minutos de matemáticas = un cerebro más fuerte! 💪 Recomendación: multiplicaciones rápidas`,
-      `¡Desafío diario activado! 🎯 ${user.name}, entrena tu tabla más débil y conviértela en fortaleza 🚀`,
-      `🔥 ¡Tu racha de ${user.currentStreak} días te está esperando! No la rompas ahora, campeón/a`,
-      `¡Momento mathboost! ⚡ 5 minutos de práctica = progreso hacia el siguiente nivel. ¡Vamos ${user.name}!`,
-      `${user.avatar} El secreto está en la constancia. ¡Tu yo del futuro te agradecerá estos 5 minutos! 🎓`,
-      `¡Alerta de genio! 🧠 ${user.name}, es hora de demostrar de qué estás hecho/a. Sugerencia: tabla del ${user.weakestTable || Math.floor(Math.random() * 8) + 2}`,
-      `🌅 Un nuevo día, una nueva oportunidad de ser más rápido/a. ¡Acelera tu mente con mathboost!`,
-      `¡Desbloquea tu potencial! 🔓 ${user.name}, cada problema resuelto te acerca a la maestría matemática`,
-      `${user.avatar} ¿Listo/a para 5 minutos de diversión matemática? ¡Tu cerebro te lo pedirá! 🎮`
-    ];
-    
-    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-    return randomMessage;
-  };
-
-  const scheduleNotification = (user) => {
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
-      const message = getMotivationalMessage(user);
-      
-      setTimeout(() => {
-        if (Notification.permission === 'granted') {
-          new Notification('MathBoost - ¡Hora de entrenar! 🧮', {
-            body: message,
-            icon: '/icon-192.png',
-            badge: '/badge-72.png',
-            tag: 'daily-reminder',
-            renotify: true,
-            vibrate: [200, 100, 200]
-          });
-        }
-      }, 5000);
+  const cancelUserNotifications = (userId) => {
+    if (notificationTimeouts[userId]) {
+      clearTimeout(notificationTimeouts[userId]);
+      setNotificationTimeouts(prev => {
+        const updated = { ...prev };
+        delete updated[userId];
+        return updated;
+      });
     }
   };
 
-  // Inicializar notificaciones
+  const getMotivationalMessage = (user) => {
+    const { motivationStyle } = user.notificationPreferences;
+    
+    const messages = {
+      encouraging: [
+        `¡Hora de brillar, ${user.name}! 🌟 Tu cerebro está listo para el siguiente desafío`,
+        `${user.avatar} ¡Cada problema resuelto te hace más fuerte! 💪 ¿Practicamos 5 minutos?`,
+        `¡Momento perfecto para entrenar! ✨ ${user.name}, tu mente matemática te está esperando`,
+        `🌱 Pequeños pasos, grandes resultados. ¡Vamos ${user.name}, tu futuro te lo agradecerá!`,
+        `${user.avatar} El secreto del éxito está en la constancia. ¡Practiquemos juntos! 🎯`
+      ],
+      challenging: [
+        `🔥 Desafío activado, ${user.name}! ¿Puedes superar tu récord de velocidad?`,
+        `${user.avatar} Los genios no nacen, se hacen entrenando. ¡Demuestra tu potencial! ⚡`,
+        `🎯 Tu mente es tu arma más poderosa. ¡Tiempo de afilarla, ${user.name}!`,
+        `¡Alerta de competencia! 🏆 ${user.name}, ¿estás listo para dominar las matemáticas?`,
+        `${user.avatar} La zona de confort es el enemigo del progreso. ¡Sal y entrena! 🚀`
+      ],
+      casual: [
+        `¡Hey ${user.name}! 😊 ¿Te apetece un ratito de mates?`,
+        `${user.avatar} Cinco minutitos de entrenamiento y luego a lo tuyo. ¡Vamos!`,
+        `🎮 Mathboost time! ${user.name}, ¿jugamos un rato?`,
+        `¡Hola! 👋 Tu cerebro dice que extraña los números. ¿Le hacemos caso?`,
+        `${user.avatar} Pausa perfecta para un poco de diversión matemática, ${user.name} 😄`
+      ],
+      professional: [
+        `${user.name}, optimiza tu rendimiento cognitivo con 5 minutos de entrenamiento. 📊`,
+        `${user.avatar} Sesión de desarrollo de habilidades cuantitativas programada. ¡Iniciemos!`,
+        `🎯 Inversión en capital intelectual: ${user.name}, mejora tu agilidad mental hoy`,
+        `Recordatorio profesional: Tu progreso matemático requiere práctica sistemática. 📈`,
+        `${user.avatar} ${user.name}, excellence requires consistency. Training time! 💼`
+      ]
+    };
+    
+    const styleMessages = messages[motivationStyle] || messages.encouraging;
+    return styleMessages[Math.floor(Math.random() * styleMessages.length)];
+  };
+
+  const scheduleUserNotifications = (user) => {
+    if (!user.notificationPreferences.enabled || user.notificationPreferences.frequency === 'never') {
+      return;
+    }
+
+    // Cancelar notificaciones anteriores de este usuario
+    cancelUserNotifications(user.name);
+
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      const message = getMotivationalMessage(user);
+      
+      // Calcular el tiempo hasta la próxima notificación
+      const now = new Date();
+      const [hours, minutes] = user.notificationPreferences.bestTime.split(':');
+      const nextNotification = new Date();
+      nextNotification.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      
+      // Si ya pasó la hora de hoy, programar para mañana
+      if (nextNotification <= now) {
+        nextNotification.setDate(nextNotification.getDate() + 1);
+      }
+      
+      const timeUntilNotification = nextNotification.getTime() - now.getTime();
+      
+      const timeoutId = setTimeout(() => {
+        if (Notification.permission === 'granted') {
+          new Notification(`MathBoost - ¡${user.name}! 🧮`, {
+            body: message,
+            icon: '/icon-192.png',
+            badge: '/badge-72.png',
+            tag: `mathboost-${user.name}`,
+            renotify: true,
+            vibrate: [200, 100, 200]
+          });
+          
+          // Programar la siguiente notificación según la frecuencia
+          if (user.notificationPreferences.frequency === 'daily') {
+            scheduleUserNotifications(user);
+          }
+        }
+      }, Math.min(timeUntilNotification, 24 * 60 * 60 * 1000)); // Máximo 24 horas
+      
+      setNotificationTimeouts(prev => ({
+        ...prev,
+        [user.name]: timeoutId
+      }));
+    }
+  };
+
+  const switchUser = (userId) => {
+    // Cancelar notificaciones del usuario anterior
+    if (currentUser) {
+      cancelUserNotifications(currentUser);
+    }
+    
+    setCurrentUser(userId);
+    setShowUserSelection(false);
+    
+    // Programar notificaciones para el nuevo usuario
+    const newUser = users[userId];
+    if (newUser) {
+      scheduleUserNotifications(newUser);
+    }
+  };
+
+  // Inicializar notificaciones y usuario por defecto
   useEffect(() => {
     requestNotificationPermission();
+    
+    // Si no hay usuario seleccionado pero hay usuarios disponibles, no seleccionar automáticamente
+    // Dejar que el usuario elija
   }, []);
+
+  // Programar notificaciones cuando se selecciona un usuario
+  useEffect(() => {
+    if (currentUser && users[currentUser]) {
+      scheduleUserNotifications(users[currentUser]);
+    }
+    
+    return () => {
+      // Limpiar notificaciones al cambiar de usuario o desmontar
+      if (currentUser) {
+        cancelUserNotifications(currentUser);
+      }
+    };
+  }, [currentUser]);
 
   // Emojis para selección
   const availableEmojis = [
@@ -680,46 +966,65 @@ const MathBoost = () => {
   const UserSelectionScreen = () => (
     <div style={{ backgroundColor: colors.background }} className="min-h-screen pt-24">
       <div className={`${r.padding} max-w-4xl mx-auto`}>
-        <div className="text-center mb-16">
+        <div className={`text-center ${screenSize === 'mobile' ? 'mb-12' : 'mb-16'}`}>
           <h1 
-            className={`${r.logoSize} font-light tracking-wider mb-8 bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent`} 
+            className={`${r.logoSize} font-light tracking-wider ${screenSize === 'mobile' ? 'mb-6' : 'mb-8'} bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent`} 
             style={{ fontFamily: 'Inter, -apple-system, sans-serif' }}
           >
             mathboost
           </h1>
           <p 
-            className="text-lg font-light mb-12" 
+            className={`${screenSize === 'mobile' ? 'text-base' : 'text-lg'} font-light ${screenSize === 'mobile' ? 'mb-8' : 'mb-12'}`}
             style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
           >
             Selecciona tu perfil o crea uno nuevo
           </p>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className={`grid ${screenSize === 'mobile' ? 'grid-cols-1 gap-3' : 'grid-cols-2 gap-6'} mb-8`}>
             {Object.values(users).map((userData) => (
               <button
                 key={userData.name}
-                onClick={() => {
-                  setCurrentUser(userData.name);
-                  setShowUserSelection(false);
-                  scheduleNotification(userData);
-                }}
-                className="group p-8 text-center rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
+                onClick={() => switchUser(userData.name)}
+                className={`group ${screenSize === 'mobile' ? 'p-4' : 'p-8'} ${screenSize === 'mobile' ? 'text-left' : 'text-center'} rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}
                 style={{
                   color: colors.text
                 }}
               >
-                <div className="text-6xl mb-4 group-hover:scale-110 transition-transform duration-300">
-                  {userData.avatar}
-                </div>
-                <div className="text-xl font-medium mb-2 capitalize" style={{ fontFamily: 'Inter, -apple-system, sans-serif' }}>
-                  {userData.name}
-                </div>
-                <div className="text-sm mb-2" style={{ color: colors.textSecondary }}>
-                  {getUserLevelName(userData)} • Nivel {userData.currentLevel}
-                </div>
-                <div className="text-sm font-light" style={{ color: colors.textSecondary }}>
-                  {userData.totalProblemsLifetime.toLocaleString()} problemas
-                </div>
+                {screenSize === 'mobile' ? (
+                  // Layout compacto horizontal para mobile
+                  <div className="flex items-center gap-4">
+                    <div className={`${screenSize === 'mobile' ? 'text-4xl' : 'text-6xl'} group-hover:scale-110 transition-transform duration-300`}>
+                      {userData.avatar}
+                    </div>
+                    <div className="flex-1">
+                      <div className={`${screenSize === 'mobile' ? 'text-lg' : 'text-xl'} font-medium mb-1 capitalize`} style={{ fontFamily: 'Inter, -apple-system, sans-serif' }}>
+                        {userData.name}
+                      </div>
+                      <div className={`${screenSize === 'mobile' ? 'text-sm' : 'text-sm'} mb-1`} style={{ color: colors.textSecondary }}>
+                        {getUserLevelName(userData)} • Nivel {userData.currentLevel}
+                      </div>
+                      <div className={`${screenSize === 'mobile' ? 'text-sm' : 'text-sm'} font-light`} style={{ color: colors.textSecondary }}>
+                        {userData.totalProblemsLifetime.toLocaleString()} problemas
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  // Layout vertical para desktop/tablet
+                  <>
+                    <div className="text-6xl mb-4 group-hover:scale-110 transition-transform duration-300">
+                      {userData.avatar}
+                    </div>
+                    <div className="text-xl font-medium mb-2 capitalize" style={{ fontFamily: 'Inter, -apple-system, sans-serif' }}>
+                      {userData.name}
+                    </div>
+                    <div className="text-sm mb-2" style={{ color: colors.textSecondary }}>
+                      {getUserLevelName(userData)} • Nivel {userData.currentLevel}
+                    </div>
+                    <div className="text-sm font-light" style={{ color: colors.textSecondary }}>
+                      {userData.totalProblemsLifetime.toLocaleString()} problemas
+                    </div>
+                  </>
+                )}
               </button>
             ))}
           </div>
@@ -729,13 +1034,13 @@ const MathBoost = () => {
               setShowCreateProfile(true);
               setShowUserSelection(false);
             }}
-            className="group px-8 py-6 text-lg font-medium rounded-3xl transition-all duration-300 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
+            className={`group ${screenSize === 'mobile' ? 'px-6 py-4' : 'px-8 py-6'} ${screenSize === 'mobile' ? 'text-base' : 'text-lg'} font-medium rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}
             style={{
               color: colors.text,
               fontFamily: 'Inter, -apple-system, sans-serif'
             }}
           >
-            <div className="text-3xl mb-2">➕</div>
+            <div className={`${screenSize === 'mobile' ? 'text-2xl' : 'text-3xl'} mb-2`}>➕</div>
             <div>Crear nuevo perfil</div>
           </button>
         </div>
@@ -871,28 +1176,74 @@ const MathBoost = () => {
           {showBack && onBack && (
             <button
               onClick={onBack}
-              className="group p-3 rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95"
+              className={`group ${r.headerCompact ? 'p-4' : 'p-3'} rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95 min-h-[44px] min-w-[44px]`}
               style={liquidGlass}
               onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
               onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
             >
-              <ArrowLeft size={18} color={colors.text} />
+              <ArrowLeft size={r.headerCompact ? 22 : 18} color={colors.text} />
             </button>
           )}
+          
+          {/* Timer durante entrenamiento - optimizado para mobile */}
           {(gameMode === 'playing' || gameMode === 'tricksPlay') && !sessionEnded && (
-            <div className="flex items-center gap-6 text-sm" style={{ color: colors.textSecondary }}>
+            <div 
+              className={`${r.headerCompact ? 'flex-col gap-1' : 'flex items-center gap-4'} px-4 py-3 rounded-2xl`}
+              style={{
+                ...liquidGlass,
+                color: colors.text,
+                fontFamily: 'Inter, -apple-system, sans-serif',
+                boxShadow: r.headerCompact ? `0 4px 20px ${colors.shadowRich}` : liquidGlass.boxShadow
+              }}
+            >
+              {/* Primera fila: Timer */}
               <div className="flex items-center gap-2">
-                <Clock size={14} />
-                <span style={{ fontFamily: 'Georgia, serif' }}>{formatSessionTime(stats.sessionDuration)}</span>
-                <span style={{ color: colors.textTertiary }}>/ 5:00</span>
+                <Clock size={r.headerCompact ? 16 : 18} color={colors.primary} />
+                <span className={`${r.headerCompact ? r.body : r.body} font-semibold`} style={{ fontFamily: 'Georgia, serif' }}>
+                  {formatSessionTime(stats.sessionDuration)}
+                </span>
+                <span className={`${r.headerCompact ? 'text-xs' : 'text-sm'}`} style={{ color: colors.textTertiary }}>/ 5:00</span>
               </div>
-              <div className="flex items-center gap-2">
-                🎯 <span style={{ fontFamily: 'Georgia, serif' }}>{stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0}%</span>
-              </div>
-              {stats.streak > 0 && (
-                <div className="flex items-center gap-2 animate-pulse">
-                  🔥 <span style={{ fontFamily: 'Georgia, serif' }}>{stats.streak}</span>
+              
+              {/* Segunda fila: Stats (solo en mobile compacto) */}
+              {r.headerCompact ? (
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Target size={14} color={colors.secondary} />
+                    <span className={`${r.body} font-semibold`} style={{ fontFamily: 'Georgia, serif' }}>
+                      {stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0}%
+                    </span>
+                  </div>
+                  {stats.streak > 0 && (
+                    <div className="flex items-center gap-2">
+                      <div className={r.body}>🔥</div>
+                      <span className={`${r.body} font-semibold`} style={{ fontFamily: 'Georgia, serif' }}>
+                        {stats.streak}
+                      </span>
+                    </div>
+                  )}
                 </div>
+              ) : (
+                <>
+                  <div className="w-px h-4 bg-gray-300"></div>
+                  <div className="flex items-center gap-2">
+                    <Target size={18} color={colors.secondary} />
+                    <span className={`${r.body} font-semibold`} style={{ fontFamily: 'Georgia, serif' }}>
+                      {stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0}%
+                    </span>
+                  </div>
+                  {stats.streak > 0 && (
+                    <>
+                      <div className="w-px h-4 bg-gray-300"></div>
+                      <div className="flex items-center gap-2">
+                        <div className={r.body}>🔥</div>
+                        <span className={`${r.body} font-semibold`} style={{ fontFamily: 'Georgia, serif' }}>
+                          {stats.streak}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -903,66 +1254,138 @@ const MathBoost = () => {
           {user && (
             <button
               onClick={() => setShowUserSelection(true)}
-              className="group flex items-center gap-2 p-3 rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95"
+              className={`group flex items-center gap-2 ${r.headerCompact ? 'p-3' : 'p-3'} rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95 min-h-[44px] min-w-[44px]`}
               style={liquidGlass}
               onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
               onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
               title="Cambiar usuario"
             >
-              <div className="text-lg">{user.avatar}</div>
-              <span className="text-sm capitalize" style={{ color: colors.text }}>{user.name}</span>
-              <div className="text-xs" style={{ color: colors.textTertiary }}>▼</div>
+              <div className={r.headerCompact ? 'text-lg' : 'text-lg'}>{user.avatar}</div>
+              <span className={`${r.headerCompact ? r.caption : r.caption} capitalize`} style={{ color: colors.text }}>{user.name}</span>
+              <div className={`${r.headerCompact ? 'text-xs' : 'text-xs'}`} style={{ color: colors.textTertiary }}>▼</div>
             </button>
           )}
           
-          {gameMode !== 'stats' && (
-            <button
-              onClick={() => setGameMode('stats')}
-              className="group p-3 rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95"
-              style={liquidGlass}
-              onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-              onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
-            >
-              <BarChart3 size={18} color={colors.textSecondary} />
-            </button>
+          {/* Solo mostrar navegación cuando NO está en entrenamiento */}
+          {gameMode !== 'playing' && gameMode !== 'tricksPlay' && (
+            <>
+              {gameMode !== 'stats' && (
+                <button
+                  onClick={() => setGameMode('stats')}
+                  className={`group ${r.headerCompact ? 'p-3' : 'p-3'} rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95 min-h-[44px] min-w-[44px]`}
+                  style={liquidGlass}
+                  onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
+                  onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
+                >
+                  <BarChart3 size={r.headerCompact ? 20 : 18} color={colors.textSecondary} />
+                </button>
+              )}
+              {gameMode !== 'tricks' && (
+                <button
+                  onClick={() => setGameMode('tricks')}
+                  className={`group ${r.headerCompact ? 'p-3' : 'p-3'} rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95 min-h-[44px] min-w-[44px]`}
+                  style={liquidGlass}
+                  onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
+                  onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
+                >
+                  <Lightbulb size={r.headerCompact ? 20 : 18} color={colors.textSecondary} />
+                </button>
+              )}
+              {gameMode !== 'welcome' && (
+                <button
+                  onClick={() => setGameMode('welcome')}
+                  className={`group ${r.headerCompact ? 'p-3' : 'p-3'} rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95 min-h-[44px] min-w-[44px]`}
+                  style={liquidGlass}
+                  onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
+                  onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
+                >
+                  <User size={r.headerCompact ? 20 : 18} color={colors.textSecondary} />
+                </button>
+              )}
+            </>
           )}
-          {gameMode !== 'tricks' && (
-            <button
-              onClick={() => setGameMode('tricks')}
-              className="group p-3 rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95"
-              style={liquidGlass}
-              onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-              onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
-            >
-              <Lightbulb size={18} color={colors.textSecondary} />
-            </button>
-          )}
-          {gameMode !== 'welcome' && (
-            <button
-              onClick={() => setGameMode('welcome')}
-              className="group p-3 rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95"
-              style={liquidGlass}
-              onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-              onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
-            >
-              <User size={18} color={colors.textSecondary} />
-            </button>
-          )}
+          
+          {/* Botón de salir solo durante entrenamiento */}
           {(gameMode === 'playing' || gameMode === 'tricksPlay') && (
             <button
               onClick={() => setGameMode('welcome')}
-              className="group p-3 rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95"
+              className={`group ${r.headerCompact ? 'p-4' : 'p-3'} rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95 min-h-[44px] min-w-[44px]`}
               style={liquidGlass}
               onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
               onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
+              title="Salir del entrenamiento"
             >
-              <X size={18} color={colors.textSecondary} />
+              <X size={r.headerCompact ? 22 : 18} color={colors.textSecondary} />
             </button>
           )}
         </div>
       </div>
     </div>
   );
+
+  // Teclado numérico para mobile
+  const MobileKeyboard = () => {
+    if (screenSize !== 'mobile' || (gameMode !== 'playing' && gameMode !== 'tricksPlay') || showFeedback || sessionEnded) {
+      return null;
+    }
+
+    const handleNumberClick = (num) => {
+      const newAnswer = userAnswer + num;
+      setUserAnswer(newAnswer);
+      
+      if (currentProblem && shouldAutoConfirm(newAnswer, currentProblem.correctAnswer)) {
+        setTimeout(() => checkAnswer(newAnswer), 300);
+      }
+    };
+
+    const handleBackspace = () => {
+      setUserAnswer(prev => prev.slice(0, -1));
+    };
+
+    const handleClear = () => {
+      setUserAnswer('');
+    };
+
+    return (
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-black/5 p-4">
+        <div className="grid grid-cols-3 gap-3 max-w-sm mx-auto mb-3">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+            <button
+              key={num}
+              onClick={() => handleNumberClick(num.toString())}
+              className="h-16 text-2xl font-semibold rounded-2xl transition-all duration-200 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
+              style={{ color: colors.text }}
+            >
+              {num}
+            </button>
+          ))}
+        </div>
+        <div className="grid grid-cols-3 gap-3 max-w-sm mx-auto">
+          <button
+            onClick={handleClear}
+            className="h-16 text-lg font-semibold rounded-2xl transition-all duration-200 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
+            style={{ color: colors.textSecondary }}
+          >
+            C
+          </button>
+          <button
+            onClick={() => handleNumberClick('0')}
+            className="h-16 text-2xl font-semibold rounded-2xl transition-all duration-200 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
+            style={{ color: colors.text }}
+          >
+            0
+          </button>
+          <button
+            onClick={handleBackspace}
+            className="h-16 text-lg font-semibold rounded-2xl transition-all duration-200 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
+            style={{ color: colors.textSecondary }}
+          >
+            ⌫
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   // Pantalla de bienvenida mejorada
   const WelcomeScreen = () => {
@@ -980,9 +1403,9 @@ const MathBoost = () => {
             >
               mathboost
             </h1>
-            <div className="mb-6 text-6xl animate-bounce">{user.avatar}</div>
+            <div className={`${screenSize === 'mobile' ? 'mb-4' : 'mb-6'} ${screenSize === 'mobile' ? 'text-5xl' : 'text-6xl'} animate-bounce hover:scale-110 transition-transform duration-300`}>{user.avatar}</div>
             <p 
-              className="text-xl font-light mb-8" 
+              className={`${getTypeSize('h2', screenSize)} font-light mb-8`}
               style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
             >
               {getUserLevelName(user)} • Nivel {user.currentLevel}
@@ -990,60 +1413,54 @@ const MathBoost = () => {
             
             <button
               onClick={() => setGameMode('setup')}
-              className="group px-12 py-6 text-2xl font-medium rounded-3xl transition-all duration-300 hover:scale-105 active:scale-95 mb-4 shadow-2xl"
+              className={`group ${screenSize === 'mobile' ? 'px-8 py-4 text-xl' : 'px-12 py-6 text-2xl'} font-medium rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 mb-4 shadow-2xl bg-white/85 backdrop-blur-xl border border-black/5 hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}
               style={{
-                ...liquidGlass,
                 background: `linear-gradient(135deg, ${colors.primaryLight}, ${colors.secondaryLight})`,
                 color: colors.text,
                 fontFamily: 'Inter, -apple-system, sans-serif',
                 border: `2px solid ${colors.primary}20`
               }}
-              onMouseEnter={(e) => Object.assign(e.target.style, {
-                ...liquidGlassHover,
-                background: `linear-gradient(135deg, ${colors.primary}20, ${colors.secondary}20)`
-              })}
-              onMouseLeave={(e) => Object.assign(e.target.style, {
-                ...liquidGlass,
-                background: `linear-gradient(135deg, ${colors.primaryLight}, ${colors.secondaryLight})`
-              })}
             >
-              🚀 comenzar entrenamiento
+              <span className="group-hover:scale-110 transition-transform duration-300 inline-block">🚀</span> comenzar entrenamiento
             </button>
             
             <div className="flex justify-center">
               <button
                 onClick={() => setShowUserSelection(true)}
-                className="group px-6 py-3 text-base font-medium rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95"
+                className={`group ${screenSize === 'mobile' ? 'px-4 py-2 text-sm' : 'px-6 py-3 text-base'} font-medium rounded-2xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}
                 style={{
-                  ...liquidGlass,
                   color: colors.textSecondary,
-                  fontFamily: 'Inter, -apple-system, sans-serif',
-                  border: `1px solid ${colors.border}`
+                  fontFamily: 'Inter, -apple-system, sans-serif'
                 }}
-                onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-                onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
               >
                 👥 Cambiar usuario
               </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-            <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105`} style={liquidGlass}>
+          <div className={`grid ${r.gridCols} ${r.gap} mb-12`}>
+            <div 
+              className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-102 active:scale-98`}
+              style={cardStyle}
+              onMouseEnter={(e) => Object.assign(e.target.style, cardStyleHover)}
+              onMouseLeave={(e) => Object.assign(e.target.style, cardStyle)}
+              onMouseDown={(e) => Object.assign(e.target.style, cardStyleActive)}
+              onMouseUp={(e) => Object.assign(e.target.style, cardStyleHover)}
+            >
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="text-3xl">📊</div>
-                  <h3 className="text-lg font-medium" style={{ color: colors.text }}>
+                  <div className="text-3xl group-hover:scale-110 transition-transform duration-300">📊</div>
+                  <h3 className={`${getTypeSize('h3', screenSize)} font-medium`} style={{ color: colors.text }}>
                     Problemas semanales
                   </h3>
                 </div>
               </div>
               <div className="mb-4">
                 <div className="flex items-baseline gap-2 mb-3">
-                  <span className="text-3xl font-light" style={{ color: colors.text, fontFamily: 'Georgia, serif' }}>
+                  <span className={`${screenSize === 'mobile' ? 'text-2xl' : 'text-3xl'} font-light`} style={{ color: colors.text, fontFamily: 'Georgia, serif' }}>
                     {user.totalProblemsThisWeek.toLocaleString()}
                   </span>
-                  <span className="text-lg" style={{ color: colors.textSecondary }}>
+                  <span className={`${getTypeSize('body', screenSize)}`} style={{ color: colors.textSecondary }}>
                     / {getWeeklyProblemsGoal(user).toLocaleString()}
                   </span>
                 </div>
@@ -1054,7 +1471,7 @@ const MathBoost = () => {
                   ></div>
                 </div>
               </div>
-              <p className="text-sm text-center" style={{ color: colors.textSecondary }}>
+              <p className={`${getTypeSize('caption', screenSize)} text-center`} style={{ color: colors.textSecondary }}>
                 {getWeeklyProblemsGoal(user) - user.totalProblemsThisWeek > 0 
                   ? `${(getWeeklyProblemsGoal(user) - user.totalProblemsThisWeek).toLocaleString()} para completar meta`
                   : '¡Meta semanal completada! 🎉'
@@ -1062,21 +1479,28 @@ const MathBoost = () => {
               </p>
             </div>
 
-            <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105`} style={liquidGlass}>
+            <div 
+              className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-102 active:scale-98`}
+              style={cardStyle}
+              onMouseEnter={(e) => Object.assign(e.target.style, cardStyleHover)}
+              onMouseLeave={(e) => Object.assign(e.target.style, cardStyle)}
+              onMouseDown={(e) => Object.assign(e.target.style, cardStyleActive)}
+              onMouseUp={(e) => Object.assign(e.target.style, cardStyleHover)}
+            >
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="text-3xl">⚡</div>
-                  <h3 className="text-lg font-medium" style={{ color: colors.text }}>
+                  <div className="text-3xl group-hover:scale-110 transition-transform duration-300">⚡</div>
+                  <h3 className={`${getTypeSize('h3', screenSize)} font-medium`} style={{ color: colors.text }}>
                     Velocidad objetivo
                   </h3>
                 </div>
               </div>
               <div className="mb-4">
                 <div className="flex items-baseline gap-2 mb-3">
-                  <span className="text-3xl font-light" style={{ color: colors.text, fontFamily: 'Georgia, serif' }}>
+                  <span className={`${screenSize === 'mobile' ? 'text-2xl' : 'text-3xl'} font-light`} style={{ color: colors.text, fontFamily: 'Georgia, serif' }}>
                     {user.averageResponseTime || 0}s
                   </span>
-                  <span className="text-lg" style={{ color: colors.textSecondary }}>
+                  <span className={`${getTypeSize('body', screenSize)}`} style={{ color: colors.textSecondary }}>
                     / {getWeeklySpeedGoal(user)}s
                   </span>
                 </div>
@@ -1091,7 +1515,7 @@ const MathBoost = () => {
                   ></div>
                 </div>
               </div>
-              <p className="text-sm text-center" style={{ color: colors.textSecondary }}>
+              <p className={`${getTypeSize('caption', screenSize)} text-center`} style={{ color: colors.textSecondary }}>
                 {user.averageResponseTime > 0 && user.averageResponseTime <= getWeeklySpeedGoal(user)
                   ? '¡Objetivo de velocidad alcanzado! 🎯'
                   : user.averageResponseTime > 0
@@ -1102,51 +1526,58 @@ const MathBoost = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+          <div className={`grid ${r.gridCols} ${r.gap} mb-12`}>
             
-            <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105`} style={liquidGlass}>
+            <div 
+              className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-102 active:scale-98`}
+              style={cardStyle}
+              onMouseEnter={(e) => Object.assign(e.target.style, cardStyleHover)}
+              onMouseLeave={(e) => Object.assign(e.target.style, cardStyle)}
+              onMouseDown={(e) => Object.assign(e.target.style, cardStyleActive)}
+              onMouseUp={(e) => Object.assign(e.target.style, cardStyleHover)}
+            >
               <div className="text-center">
-                <div className="text-4xl mb-4">🔥</div>
-                <h4 className="text-lg font-medium mb-2" style={{ color: colors.text }}>
+                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">🔥</div>
+                <h4 className={`${getTypeSize('h3', screenSize)} font-medium mb-2`} style={{ color: colors.text }}>
                   Rachas
                 </h4>
-                <div className="text-3xl font-light mb-1" style={{ color: colors.text, fontFamily: 'Georgia, serif' }}>
+                <div className={`${screenSize === 'mobile' ? 'text-2xl' : 'text-3xl'} font-light mb-1`} style={{ color: colors.text, fontFamily: 'Georgia, serif' }}>
                   {user.currentStreak} días
                 </div>
-                <div className="text-base font-light mb-3" style={{ color: colors.textSecondary }}>
+                <div className={`${getTypeSize('body', screenSize)} font-light mb-3`} style={{ color: colors.textSecondary }}>
                   actual
                 </div>
-                <div className="text-sm font-light" style={{ color: colors.textSecondary }}>
+                <div className={`${getTypeSize('caption', screenSize)} font-light`} style={{ color: colors.textSecondary }}>
                   🏆 Mejor: {user.bestStreak} días
                 </div>
               </div>
             </div>
 
-            <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105`} style={liquidGlass}>
+            <div {...getCardProps()} className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-102 active:scale-98`}>
               <div className="text-center">
-                <div className="text-4xl mb-4">💎</div>
-                <h4 className="text-lg font-medium mb-2" style={{ color: colors.text }}>
+                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">💎</div>
+                <h4 className={`${getTypeSize('h3', screenSize)} font-medium mb-2`} style={{ color: colors.text }}>
                   Tu velocidad
                 </h4>
-                <div className="text-3xl font-light mb-1" style={{ color: colors.successText, fontFamily: 'Georgia, serif' }}>
+                <div className={`${screenSize === 'mobile' ? 'text-2xl' : 'text-3xl'} font-light mb-1`} style={{ color: colors.successText, fontFamily: 'Georgia, serif' }}>
                   {user.averageResponseTime || 0}s
                 </div>
-                <div className="text-base font-light mb-3" style={{ color: colors.textSecondary }}>
+                <div className={`${getTypeSize('body', screenSize)} font-light mb-3`} style={{ color: colors.textSecondary }}>
                   promedio
                 </div>
-                <div className="text-sm font-light" style={{ color: colors.textSecondary }}>
+                <div className={`${getTypeSize('caption', screenSize)} font-light`} style={{ color: colors.textSecondary }}>
                   📊 Global: {user.averageUserSpeed || 0}s
                 </div>
               </div>
             </div>
 
-            <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105`} style={liquidGlass}>
+            <div {...getCardProps()} className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-102 active:scale-98`}>
               <div className="text-center">
-                <div className="text-4xl mb-4">{user.nextAchievement.emoji}</div>
-                <h4 className="text-lg font-medium mb-2" style={{ color: colors.text }}>
+                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">{user.nextAchievement.emoji}</div>
+                <h4 className={`${getTypeSize('h3', screenSize)} font-medium mb-2`} style={{ color: colors.text }}>
                   Próximo logro
                 </h4>
-                <div className="text-base font-medium mb-4" style={{ color: colors.text }}>
+                <div className={`${getTypeSize('body', screenSize)} font-medium mb-4`} style={{ color: colors.text }}>
                   {user.nextAchievement.name}
                 </div>
                 <div className="mb-3 h-1.5 bg-gray-200 rounded-full overflow-hidden">
@@ -1155,49 +1586,49 @@ const MathBoost = () => {
                     style={{ width: `${(user.nextAchievement.progress / user.nextAchievement.total) * 100}%` }}
                   ></div>
                 </div>
-                <div className="text-sm font-light" style={{ color: colors.textSecondary }}>
+                <div className={`${getTypeSize('caption', screenSize)} font-light`} style={{ color: colors.textSecondary }}>
                   {user.nextAchievement.progress}/{user.nextAchievement.total}
                 </div>
               </div>
             </div>
 
-            <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105`} style={liquidGlass}>
+            <div {...getCardProps()} className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-102 active:scale-98`}>
               <div className="text-center">
-                <div className="text-4xl mb-4">🎯</div>
-                <h4 className="text-lg font-medium mb-2" style={{ color: colors.text }}>
+                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">🎯</div>
+                <h4 className={`${getTypeSize('h3', screenSize)} font-medium mb-2`} style={{ color: colors.text }}>
                   Total lifetime
                 </h4>
-                <div className="text-3xl font-light mb-1" style={{ color: colors.text, fontFamily: 'Georgia, serif' }}>
+                <div className={`${screenSize === 'mobile' ? 'text-2xl' : 'text-3xl'} font-light mb-1`} style={{ color: colors.text, fontFamily: 'Georgia, serif' }}>
                   {user.totalProblemsLifetime.toLocaleString()}
                 </div>
-                <div className="text-base font-light mb-3" style={{ color: colors.textSecondary }}>
+                <div className={`${getTypeSize('body', screenSize)} font-light mb-3`} style={{ color: colors.textSecondary }}>
                   problemas resueltos
                 </div>
-                <div className="text-sm font-light" style={{ color: colors.textSecondary }}>
+                <div className={`${getTypeSize('caption', screenSize)} font-light`} style={{ color: colors.textSecondary }}>
                   ⏱️ {user.totalHoursInvested}h invertidas
                 </div>
               </div>
             </div>
 
-            <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105`} style={liquidGlass}>
+            <div {...getCardProps()} className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-102 active:scale-98`}>
               <div className="text-center">
-                <div className="text-4xl mb-4">📈</div>
-                <h4 className="text-lg font-medium mb-4" style={{ color: colors.text }}>
+                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">📈</div>
+                <h4 className={`${getTypeSize('h3', screenSize)} font-medium mb-4`} style={{ color: colors.text }}>
                   Análisis de tablas
                 </h4>
                 <div className="space-y-3">
                   {user.bestTable && (
-                    <div className="text-sm font-light" style={{ color: colors.successText }}>
+                    <div className={`${getTypeSize('caption', screenSize)} font-light`} style={{ color: colors.successText }}>
                       💪 Dominas la del {user.bestTable}
                     </div>
                   )}
                   {user.weakestTable && (
-                    <div className="text-sm font-light" style={{ color: colors.textSecondary }}>
+                    <div className={`${getTypeSize('caption', screenSize)} font-light`} style={{ color: colors.textSecondary }}>
                       🎯 Mejora la del {user.weakestTable}
                     </div>
                   )}
                   {!user.bestTable && !user.weakestTable && (
-                    <div className="text-sm font-light" style={{ color: colors.textSecondary }}>
+                    <div className={`${getTypeSize('caption', screenSize)} font-light`} style={{ color: colors.textSecondary }}>
                       ¡Comienza a entrenar para ver tu análisis!
                     </div>
                   )}
@@ -1205,37 +1636,37 @@ const MathBoost = () => {
               </div>
             </div>
 
-            <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105`} style={liquidGlass}>
+            <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
               <div className="text-center">
-                <div className="text-4xl mb-4">🔮</div>
-                <h4 className="text-lg font-medium mb-2" style={{ color: colors.text }}>
+                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">🔮</div>
+                <h4 className={`${getTypeSize('h3', screenSize)} font-medium mb-2`} style={{ color: colors.text }}>
                   Proyección
                 </h4>
-                <div className="text-sm font-light mb-2" style={{ color: colors.text }}>
+                <div className={`${getTypeSize('caption', screenSize)} font-light mb-2`} style={{ color: colors.text }}>
                   A este ritmo serás
                 </div>
-                <div className="text-base font-medium mb-2" style={{ color: colors.text }}>
+                <div className={`${getTypeSize('body', screenSize)} font-medium mb-2`} style={{ color: colors.text }}>
                   {user.projectionText}
                 </div>
-                <div className="text-sm font-light" style={{ color: colors.textSecondary }}>
+                <div className={`${getTypeSize('caption', screenSize)} font-light`} style={{ color: colors.textSecondary }}>
                   en {user.projectionWeeks} semanas
                 </div>
               </div>
             </div>
           </div>
 
-          <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-102 mb-8`} style={liquidGlass}>
-            <h3 className="text-lg font-medium mb-8 text-center" style={{ color: colors.text }}>
+          <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-102 mb-8 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
+            <h3 className={`${getTypeSize('h3', screenSize)} font-medium mb-8 text-center`} style={{ color: colors.text }}>
               Patrones de actividad
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
               <div>
-                <h4 className="text-lg font-medium mb-4" style={{ color: colors.text }}>Últimas 4 semanas</h4>
+                <h4 className={`${getTypeSize('h3', screenSize)} font-medium mb-4`} style={{ color: colors.text }}>Últimas 4 semanas</h4>
                 <div className="flex justify-center mb-4">
                   <div className="grid grid-cols-7 gap-2">
                     {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((day, index) => (
-                      <div key={index} className="text-xs text-center font-medium mb-2" style={{ color: colors.textSecondary }}>
+                      <div key={index} className={`${getTypeSize('caption', screenSize)} text-center font-medium mb-2`} style={{ color: colors.textSecondary }}>
                         {day}
                       </div>
                     ))}
@@ -1255,7 +1686,7 @@ const MathBoost = () => {
                   </div>
                 </div>
                 <div className="flex justify-center items-center gap-4">
-                  <span className="text-sm font-light" style={{ color: colors.textSecondary }}>Menos</span>
+                  <span className={`${getTypeSize('caption', screenSize)} font-light`} style={{ color: colors.textSecondary }}>Menos</span>
                   <div className="flex gap-1">
                     {[0, 1, 2, 3].map(intensity => (
                       <div
@@ -1270,18 +1701,18 @@ const MathBoost = () => {
                       />
                     ))}
                   </div>
-                  <span className="text-sm font-light" style={{ color: colors.textSecondary }}>Más</span>
+                  <span className={`${getTypeSize('caption', screenSize)} font-light`} style={{ color: colors.textSecondary }}>Más</span>
                 </div>
               </div>
 
               <div>
-                <h4 className="text-lg font-medium mb-4" style={{ color: colors.text }}>Insights de actividad</h4>
+                <h4 className={`${getTypeSize('h3', screenSize)} font-medium mb-4`} style={{ color: colors.text }}>Insights de actividad</h4>
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <Calendar size={20} color={colors.primary} />
                     <div>
-                      <div className="text-sm font-medium" style={{ color: colors.text }}>Mejores días</div>
-                      <div className="text-sm" style={{ color: colors.textSecondary }}>
+                      <div className={`${getTypeSize('body', screenSize)} font-medium`} style={{ color: colors.text }}>Mejores días</div>
+                      <div className={`${getTypeSize('caption', screenSize)}`} style={{ color: colors.textSecondary }}>
                         {user.activityPatterns.bestDays.length > 0 
                           ? user.activityPatterns.bestDays.join(', ')
                           : 'Por descubrir'
@@ -1292,8 +1723,8 @@ const MathBoost = () => {
                   <div className="flex items-center gap-3">
                     <Clock size={20} color={colors.secondary} />
                     <div>
-                      <div className="text-sm font-medium" style={{ color: colors.text }}>Horas preferidas</div>
-                      <div className="text-sm" style={{ color: colors.textSecondary }}>
+                      <div className={`${getTypeSize('body', screenSize)} font-medium`} style={{ color: colors.text }}>Horas preferidas</div>
+                      <div className={`${getTypeSize('caption', screenSize)}`} style={{ color: colors.textSecondary }}>
                         {user.activityPatterns.bestHours.length > 0 
                           ? user.activityPatterns.bestHours.join(', ')
                           : 'Por descubrir'
@@ -1304,8 +1735,8 @@ const MathBoost = () => {
                   <div className="flex items-center gap-3">
                     <Target size={20} color={colors.primary} />
                     <div>
-                      <div className="text-sm font-medium" style={{ color: colors.text }}>Sesión promedio</div>
-                      <div className="text-sm" style={{ color: colors.textSecondary }}>
+                      <div className={`${getTypeSize('body', screenSize)} font-medium`} style={{ color: colors.text }}>Sesión promedio</div>
+                      <div className={`${getTypeSize('caption', screenSize)}`} style={{ color: colors.textSecondary }}>
                         {user.activityPatterns.avgSessionLength}
                       </div>
                     </div>
@@ -1321,300 +1752,517 @@ const MathBoost = () => {
 
   // Setup mejorado con consistencia
   const SetupScreen = () => (
-    <div style={{ backgroundColor: colors.background }} className="min-h-screen pt-24">
+    <div style={{ backgroundColor: colors.background }} className={`${screenSize === 'mobile' ? 'h-screen flex flex-col' : 'min-h-screen pt-24'}`}>
       <NavigationHeader showBack={true} onBack={() => setGameMode('welcome')} />
-      <div className={`flex items-center justify-center min-h-screen ${r.padding}`}>
-        <div className="max-w-4xl w-full">
-          <div className="text-center mb-20">
-            <h1 
-              className="text-4xl font-light mb-8" 
-              style={{ color: colors.text, fontFamily: 'Inter, -apple-system, sans-serif' }}
-            >
-              configuración
-            </h1>
-            
-            <div className="flex items-center justify-center gap-4 mb-8">
-              <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${setupStep === 1 ? 'bg-gray-100' : 'bg-gray-50'}`}>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-                  setupStep === 1 ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-600'
-                }`}>1</div>
-                <span className={`text-sm ${setupStep === 1 ? 'text-gray-800' : 'text-gray-500'}`}>Operación</span>
-              </div>
-              <div className="w-8 h-px bg-gray-300"></div>
-              <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${setupStep === 2 ? 'bg-gray-100' : 'bg-gray-50'}`}>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-                  setupStep === 2 ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-600'
-                }`}>2</div>
-                <span className={`text-sm ${setupStep === 2 ? 'text-gray-800' : 'text-gray-500'}`}>
-                  {operation === 'multiplication' ? 'Tablas' : 'Rango'}
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          {setupStep === 1 && (
-            <div className="space-y-12">
-              <p 
-                className="text-center text-lg font-light mb-16" 
-                style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
+      {screenSize === 'mobile' ? (
+        // Layout compacto para mobile - sin scroll
+        <div className="flex-1 flex flex-col justify-center px-4">
+          <div className="max-w-4xl w-full">
+            <div className="text-center mb-6">
+              <h1 
+                className="text-2xl font-light mb-4"
+                style={{ color: colors.text, fontFamily: 'Inter, -apple-system, sans-serif' }}
               >
-                ¿qué operación practicarás?
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {[
-                  { key: 'multiplication', label: 'multiplicación', symbol: '×' },
-                  { key: 'addition', label: 'suma', symbol: '+' },
-                  { key: 'subtraction', label: 'resta', symbol: '−' }
-                ].map(op => (
-                  <button
-                    key={op.key}
-                    onClick={() => {setOperation(op.key); setSetupStep(2);}}
-                    className="group p-12 text-center rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95"
-                    style={{
-                      ...liquidGlass,
-                      backgroundColor: operation === op.key ? colors.accentActive : colors.surface,
-                      color: colors.text
-                    }}
-                    onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-                    onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
-                  >
-                    <div 
-                      className="text-6xl font-light mb-6 group-hover:scale-110 transition-transform duration-300" 
-                      style={{ fontFamily: 'Georgia, serif' }}
-                    >
-                      {op.symbol}
-                    </div>
-                    <div 
-                      className="text-lg font-medium" 
-                      style={{ fontFamily: 'Inter, -apple-system, sans-serif' }}
-                    >
-                      {op.label}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {setupStep === 2 && operation === 'multiplication' && (
-            <div className="space-y-12">
-              <div className="flex items-center justify-between mb-16">
-                <p 
-                  className="text-lg font-light" 
-                  style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
-                >
-                  selecciona las tablas
-                </p>
+                configuración
+              </h1>
+              
+              <div className="flex items-center justify-center gap-4 mb-4">
                 <button
                   onClick={() => setSetupStep(1)}
-                  className="group flex items-center gap-2 px-4 py-2 rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95 text-base"
-                  style={{
-                    ...liquidGlass,
-                    color: colors.text,
-                    fontFamily: 'Inter, -apple-system, sans-serif'
-                  }}
-                  onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-                  onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-all duration-300 hover:scale-105 ${
+                    setupStep === 1 ? 'bg-gray-100' : 'bg-gray-50 hover:bg-gray-100'
+                  }`}
                 >
-                  <RotateCcw size={16} />
-                  cambiar operación
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-medium ${
+                    setupStep === 1 ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-600'
+                  }`}>1</div>
+                  <span className={`text-xs ${setupStep === 1 ? 'text-gray-800' : 'text-gray-500'}`}>Operación</span>
                 </button>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                {[2, 3, 4, 5, 6, 7, 8, 9].map(table => (
-                  <button
-                    key={table}
-                    onClick={() => {
-                      setSelectedTables(prev => 
-                        prev.includes(table) 
-                          ? prev.filter(t => t !== table)
-                          : [...prev, table]
-                      );
-                    }}
-                    className="group p-10 text-center rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95"
-                    style={{
-                      ...liquidGlass,
-                      backgroundColor: selectedTables.includes(table) ? colors.accentActive : colors.surface,
-                      color: colors.text
-                    }}
-                    onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-                    onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
-                  >
-                    <div 
-                      className="text-3xl font-medium group-hover:scale-110 transition-transform duration-300" 
-                      style={{ fontFamily: 'Georgia, serif' }}
-                    >
-                      {table}
-                    </div>
-                  </button>
-                ))}
-              </div>
-              <div className="text-center mt-16">
-                <button
-                  onClick={startGame}
-                  disabled={selectedTables.length === 0}
-                  className="group px-12 py-4 text-lg font-medium rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50"
-                  style={{
-                    ...liquidGlass,
-                    color: colors.text,
-                    fontFamily: 'Inter, -apple-system, sans-serif'
-                  }}
-                  onMouseEnter={(e) => !e.target.disabled && Object.assign(e.target.style, liquidGlassHover)}
-                  onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
-                >
-                  comenzar entrenamiento
-                </button>
+                <div className="w-6 h-px bg-gray-300"></div>
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${setupStep === 2 ? 'bg-gray-100' : 'bg-gray-50'}`}>
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-medium ${
+                    setupStep === 2 ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-600'
+                  }`}>2</div>
+                  <span className={`text-xs ${setupStep === 2 ? 'text-gray-800' : 'text-gray-500'}`}>
+                    {operation === 'multiplication' ? 'Tablas' : 'Rango'}
+                  </span>
+                </div>
               </div>
             </div>
-          )}
-
-          {setupStep === 2 && (operation === 'addition' || operation === 'subtraction') && (
-            <div className="space-y-12">
-              <div className="flex items-center justify-between mb-16">
+            
+            {setupStep === 1 && (
+              <div className="space-y-4">
                 <p 
-                  className="text-lg font-light" 
+                  className="text-center text-base font-light mb-4"
                   style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
                 >
-                  rango de números
+                  ¿qué operación practicarás?
                 </p>
-                <button
-                  onClick={() => setSetupStep(1)}
-                  className="group flex items-center gap-2 px-4 py-2 rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95 text-base"
-                  style={{
-                    ...liquidGlass,
-                    color: colors.text,
-                    fontFamily: 'Inter, -apple-system, sans-serif'
-                  }}
-                  onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-                  onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
-                >
-                  <RotateCcw size={16} />
-                  cambiar operación
-                </button>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {[
-                  { key: '1-9', label: '1 — 9' },
-                  { key: '10-99', label: '10 — 99' },
-                  { key: '100-999', label: '100 — 999' }
-                ].map(range => (
-                  <button
-                    key={range.key}
-                    onClick={() => {setNumberRange(range.key); startGame();}}
-                    className="group p-12 text-center rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95"
-                    style={{
-                      ...liquidGlass,
-                      backgroundColor: colors.surface,
-                      color: colors.text
-                    }}
-                    onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-                    onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
-                  >
-                    <div 
-                      className="text-3xl font-medium group-hover:scale-110 transition-transform duration-300" 
-                      style={{ fontFamily: 'Georgia, serif' }}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {[
+                    { key: 'multiplication', label: 'multiplicación', symbol: '×' },
+                    { key: 'addition', label: 'suma', symbol: '+' },
+                    { key: 'subtraction', label: 'resta', symbol: '−' }
+                  ].map(op => (
+                    <button
+                      key={op.key}
+                      onClick={() => {setOperation(op.key); setSetupStep(2);}}
+                      className="group p-4 text-center rounded-2xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
+                      style={{
+                        backgroundColor: operation === op.key ? colors.accentActive : colors.surface,
+                        color: colors.text
+                      }}
                     >
-                      {range.label}
-                    </div>
-                  </button>
-                ))}
+                      <div 
+                        className="text-3xl font-light mb-2 group-hover:scale-110 transition-transform duration-300"
+                        style={{ fontFamily: 'Georgia, serif' }}
+                      >
+                        {op.symbol}
+                      </div>
+                      <div 
+                        className="text-sm font-medium"
+                        style={{ fontFamily: 'Inter, -apple-system, sans-serif' }}
+                      >
+                        {op.label}
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+
+            {setupStep === 2 && operation === 'multiplication' && (
+              <div className="space-y-4">
+                <div className="text-center mb-4">
+                  <p 
+                    className="text-base font-light"
+                    style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
+                  >
+                    selecciona las tablas
+                  </p>
+                </div>
+                <div className="grid grid-cols-4 gap-3">
+                  {[2, 3, 4, 5, 6, 7, 8, 9].map(table => (
+                    <button
+                      key={table}
+                      onClick={() => {
+                        setSelectedTables(prev => 
+                          prev.includes(table) 
+                            ? prev.filter(t => t !== table)
+                            : [...prev, table]
+                        );
+                      }}
+                      className="group p-3 text-center rounded-xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
+                      style={{
+                        backgroundColor: selectedTables.includes(table) ? colors.accentActive : colors.surface,
+                        color: colors.text
+                      }}
+                    >
+                      <div 
+                        className="text-lg font-medium group-hover:scale-110 transition-transform duration-300"
+                        style={{ fontFamily: 'Georgia, serif' }}
+                      >
+                        {table}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                <div className="text-center mt-4">
+                  <button
+                    onClick={startGame}
+                    disabled={selectedTables.length === 0}
+                    className="group px-6 py-2 text-sm font-medium rounded-xl transition-all duration-500 hover:scale-105 active:scale-95 disabled:opacity-50 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
+                    style={{
+                      color: colors.text,
+                      fontFamily: 'Inter, -apple-system, sans-serif'
+                    }}
+                  >
+                    comenzar entrenamiento
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {setupStep === 2 && (operation === 'addition' || operation === 'subtraction') && (
+              <div className="space-y-4">
+                <div className="text-center mb-4">
+                  <p 
+                    className="text-base font-light"
+                    style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
+                  >
+                    rango de números
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {[
+                    { key: '1-9', label: '1 — 9' },
+                    { key: '10-99', label: '10 — 99' },
+                    { key: '100-999', label: '100 — 999' }
+                  ].map(range => (
+                    <button
+                      key={range.key}
+                      onClick={() => {setNumberRange(range.key); startGame();}}
+                      className="group p-4 text-center rounded-2xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
+                      style={{
+                        backgroundColor: colors.surface,
+                        color: colors.text
+                      }}
+                    >
+                      <div 
+                        className="text-lg font-medium group-hover:scale-110 transition-transform duration-300"
+                        style={{ fontFamily: 'Georgia, serif' }}
+                      >
+                        {range.label}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      ) : (
+        // Layout para desktop/tablet (sin cambios)
+        <div className={`flex items-center justify-center min-h-screen ${r.padding}`}>
+          <div className="max-w-4xl w-full">
+            <div className={`text-center ${screenSize === 'mobile' ? 'mb-16' : 'mb-20'}`}>
+              <h1 
+                className={`${screenSize === 'mobile' ? 'text-3xl' : 'text-4xl'} font-light ${screenSize === 'mobile' ? 'mb-6' : 'mb-8'}`}
+                style={{ color: colors.text, fontFamily: 'Inter, -apple-system, sans-serif' }}
+              >
+                configuración
+              </h1>
+              
+              <div className="flex items-center justify-center gap-4 mb-8">
+                <button
+                  onClick={() => setSetupStep(1)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 hover:scale-105 ${
+                    setupStep === 1 ? 'bg-gray-100' : 'bg-gray-50 hover:bg-gray-100'
+                  }`}
+                >
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
+                    setupStep === 1 ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-600'
+                  }`}>1</div>
+                  <span className={`text-sm ${setupStep === 1 ? 'text-gray-800' : 'text-gray-500'}`}>Operación</span>
+                </button>
+                <div className="w-8 h-px bg-gray-300"></div>
+                <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${setupStep === 2 ? 'bg-gray-100' : 'bg-gray-50'}`}>
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
+                    setupStep === 2 ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-600'
+                  }`}>2</div>
+                  <span className={`text-sm ${setupStep === 2 ? 'text-gray-800' : 'text-gray-500'}`}>
+                    {operation === 'multiplication' ? 'Tablas' : 'Rango'}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            {setupStep === 1 && (
+              <div className="space-y-8">
+                <p 
+                  className={`text-center ${screenSize === 'mobile' ? 'text-xl' : 'text-lg'} font-light ${screenSize === 'mobile' ? 'mb-12' : 'mb-16'}`}
+                  style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
+                >
+                  ¿qué operación practicarás?
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {[
+                    { key: 'multiplication', label: 'multiplicación', symbol: '×' },
+                    { key: 'addition', label: 'suma', symbol: '+' },
+                    { key: 'subtraction', label: 'resta', symbol: '−' }
+                  ].map(op => (
+                    <button
+                      key={op.key}
+                      onClick={() => {setOperation(op.key); setSetupStep(2);}}
+                      className={`group ${screenSize === 'mobile' ? 'p-6' : 'p-12'} text-center rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}
+                      style={{
+                        backgroundColor: operation === op.key ? colors.accentActive : colors.surface,
+                        color: colors.text
+                      }}
+                    >
+                      <div 
+                        className={`${screenSize === 'mobile' ? 'text-4xl' : 'text-6xl'} font-light ${screenSize === 'mobile' ? 'mb-4' : 'mb-6'} group-hover:scale-110 transition-transform duration-300`}
+                        style={{ fontFamily: 'Georgia, serif' }}
+                      >
+                        {op.symbol}
+                      </div>
+                      <div 
+                        className={`${screenSize === 'mobile' ? 'text-base' : 'text-lg'} font-medium`}
+                        style={{ fontFamily: 'Inter, -apple-system, sans-serif' }}
+                      >
+                        {op.label}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {setupStep === 2 && operation === 'multiplication' && (
+              <div className="space-y-8">
+                <div className="text-center mb-12">
+                  <p 
+                    className={`${screenSize === 'mobile' ? 'text-xl' : 'text-lg'} font-light`}
+                    style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
+                  >
+                    selecciona las tablas
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  {[2, 3, 4, 5, 6, 7, 8, 9].map(table => (
+                    <button
+                      key={table}
+                      onClick={() => {
+                        setSelectedTables(prev => 
+                          prev.includes(table) 
+                            ? prev.filter(t => t !== table)
+                            : [...prev, table]
+                        );
+                      }}
+                      className={`group ${screenSize === 'mobile' ? 'p-6' : 'p-10'} text-center rounded-2xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}
+                      style={{
+                        backgroundColor: selectedTables.includes(table) ? colors.accentActive : colors.surface,
+                        color: colors.text
+                      }}
+                    >
+                      <div 
+                        className={`${screenSize === 'mobile' ? 'text-xl' : 'text-3xl'} font-medium group-hover:scale-110 transition-transform duration-300`}
+                        style={{ fontFamily: 'Georgia, serif' }}
+                      >
+                        {table}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                <div className="text-center mt-12">
+                  <button
+                    onClick={startGame}
+                    disabled={selectedTables.length === 0}
+                    className={`group ${screenSize === 'mobile' ? 'px-8 py-3 text-base' : 'px-12 py-4 text-lg'} font-medium rounded-2xl transition-all duration-500 hover:scale-105 active:scale-95 disabled:opacity-50 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}
+                    style={{
+                      color: colors.text,
+                      fontFamily: 'Inter, -apple-system, sans-serif'
+                    }}
+                  >
+                    comenzar entrenamiento
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {setupStep === 2 && (operation === 'addition' || operation === 'subtraction') && (
+              <div className="space-y-8">
+                <div className="text-center mb-12">
+                  <p 
+                    className={`${screenSize === 'mobile' ? 'text-xl' : 'text-lg'} font-light`}
+                    style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
+                  >
+                    rango de números
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {[
+                    { key: '1-9', label: '1 — 9' },
+                    { key: '10-99', label: '10 — 99' },
+                    { key: '100-999', label: '100 — 999' }
+                  ].map(range => (
+                    <button
+                      key={range.key}
+                      onClick={() => {setNumberRange(range.key); startGame();}}
+                      className={`group ${screenSize === 'mobile' ? 'p-6' : 'p-12'} text-center rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}
+                      style={{
+                        backgroundColor: colors.surface,
+                        color: colors.text
+                      }}
+                    >
+                      <div 
+                        className={`${screenSize === 'mobile' ? 'text-xl' : 'text-3xl'} font-medium group-hover:scale-110 transition-transform duration-300`}
+                        style={{ fontFamily: 'Georgia, serif' }}
+                      >
+                        {range.label}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 
   // Game Screen
   const GameScreen = () => (
-    <div style={{ backgroundColor: colors.background }} className="min-h-screen pt-24">
+    <div style={{ backgroundColor: colors.background }} className={`${screenSize === 'mobile' ? 'h-screen flex flex-col' : 'min-h-screen pt-24'}`}>
       <NavigationHeader />
-      <div className={`flex items-center justify-center min-h-screen ${r.padding}`}>
-        <div className="max-w-3xl w-full text-center">
-          {currentProblem && !sessionEnded && (
-            <>
-              <div className="mb-20">
-                <div 
-                  className="text-9xl font-light mb-12 tracking-wider animate-pulse" 
-                  style={{ 
-                    color: colors.text, 
-                    fontFamily: 'Georgia, serif',
-                    animationDuration: '3s',
-                    animationIterationCount: '1',
-                    textShadow: `0 4px 20px ${colors.shadowRich}`
-                  }}
-                >
-                  {currentProblem.num1} {getOperationSymbol(currentProblem.operation)} {currentProblem.num2}
-                </div>
-                <div className="h-1 w-24 mx-auto bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
-              </div>
-              
-              <div className="mb-20 relative">
-                <Sparkle show={showSparkle} />
-                <div 
-                  className={`relative text-9xl font-light min-h-[160px] flex items-center justify-center transition-all duration-500 ${
-                    showFeedback 
-                      ? isCorrect ? 'scale-110' : 'scale-90'
-                      : 'scale-100'
-                  }`} 
-                  style={{ 
-                    color: showFeedback ? (isCorrect ? colors.successText : colors.errorText) : colors.text,
-                    fontFamily: 'Georgia, serif',
-                    textShadow: showFeedback ? `0 8px 32px ${isCorrect ? colors.success : colors.error}` : 'none'
-                  }}
-                >
-                  {showFeedback 
-                    ? currentProblem.correctAnswer
-                    : userAnswer || (
-                      <span style={{ 
-                        opacity: 0.3, 
-                        borderBottom: `3px solid ${colors.border}`, 
-                        paddingBottom: '12px',
-                        animation: 'pulse 2s infinite'
-                      }}>
-                        {getExpectedDigits(currentProblem.correctAnswer) === 1 ? '_' : '__'}
-                      </span>
-                    )}
-                </div>
-                
-                {userAnswer && !showFeedback && (
-                  <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-12 h-2 overflow-hidden rounded-full" 
-                       style={{ backgroundColor: colors.surface }}>
-                    <div 
-                      className="h-full transition-all duration-500 bg-gradient-to-r from-blue-400 to-green-400"
-                      style={{ 
-                        width: `${(userAnswer.length / getExpectedDigits(currentProblem.correctAnswer)) * 100}%`
-                      }}
-                    ></div>
-                  </div>
-                )}
-                
-                {showFeedback && !isCorrect && userAnswer && (
+      {screenSize === 'mobile' ? (
+        // Layout optimizado para mobile
+        <div className="flex-1 flex flex-col justify-center px-4 pb-32">
+          <div className="max-w-3xl w-full text-center">
+            {currentProblem && !sessionEnded && (
+              <div className="space-y-8">
+                <div className="mb-4">
                   <div 
-                    className="text-lg font-light mt-6 p-4 rounded-xl" 
+                    className={`${r.problemSize} font-light mb-4 tracking-wider animate-pulse`}
                     style={{ 
-                      color: colors.textSecondary, 
-                      fontFamily: 'Inter, -apple-system, sans-serif',
-                      backgroundColor: colors.error,
-                      border: `1px solid ${colors.errorText}20`
+                      color: colors.text, 
+                      fontFamily: 'Georgia, serif',
+                      animationDuration: '3s',
+                      animationIterationCount: '1',
+                      textShadow: `0 4px 20px ${colors.shadowRich}`
                     }}
                   >
-                    escribiste: <span style={{ fontFamily: 'Georgia, serif' }}>{userAnswer}</span>
+                    {currentProblem.num1} {getOperationSymbol(currentProblem.operation)} {currentProblem.num2}
                   </div>
-                )}
-              </div>
+                  <div className="h-1 w-20 mx-auto bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+                </div>
+                
+                <div className="relative">
+                  <Sparkle show={showSparkle} />
+                  <div 
+                    className={`relative ${r.answerSize} font-light min-h-[100px] flex items-center justify-center transition-all duration-500`}
+                    style={{ 
+                      color: showFeedback ? (isCorrect ? colors.successText : colors.errorText) : colors.text,
+                      fontFamily: 'Georgia, serif',
+                      textShadow: showFeedback ? `0 8px 32px ${isCorrect ? colors.success : colors.error}` : 'none'
+                    }}
+                  >
+                    {showFeedback 
+                      ? currentProblem.correctAnswer
+                      : userAnswer || (
+                        <span style={{ 
+                          opacity: 0.3, 
+                          borderBottom: `3px solid ${colors.border}`, 
+                          paddingBottom: '6px',
+                          animation: 'pulse 2s infinite'
+                        }}>
+                          {getExpectedDigits(currentProblem.correctAnswer) === 1 ? '_' : '__'}
+                        </span>
+                      )}
+                  </div>
+                  
+                  {userAnswer && !showFeedback && (
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-10 h-1.5 overflow-hidden rounded-full" 
+                         style={{ backgroundColor: colors.surface }}>
+                      <div 
+                        className="h-full transition-all duration-500 bg-gradient-to-r from-blue-400 to-green-400"
+                        style={{ 
+                          width: `${(userAnswer.length / getExpectedDigits(currentProblem.correctAnswer)) * 100}%`
+                        }}
+                      ></div>
+                    </div>
+                  )}
+                  
+                  {showFeedback && !isCorrect && userAnswer && (
+                    <div 
+                      className="text-sm font-light mt-3 p-2 rounded-lg"
+                      style={{ 
+                        color: colors.textSecondary, 
+                        fontFamily: 'Inter, -apple-system, sans-serif',
+                        backgroundColor: colors.error,
+                        border: `1px solid ${colors.errorText}20`
+                      }}
+                    >
+                      escribiste: <span style={{ fontFamily: 'Georgia, serif' }}>{userAnswer}</span>
+                    </div>
+                  )}
+                </div>
 
-              <div 
-                className="text-lg font-light" 
-                style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
-              >
-                escribe tu respuesta
+                {/* No mostrar texto de instrucción en mobile - el teclado es obvio */}
               </div>
-            </>
-          )}
+            )}
+          </div>
         </div>
-      </div>
+      ) : (
+        // Layout para desktop/tablet (sin cambios)
+        <div className={`flex items-center justify-center ${r.gamePadding} min-h-screen`}>
+          <div className="max-w-3xl w-full text-center">
+            {currentProblem && !sessionEnded && (
+              <div className={r.gameSpacing}>
+                <div className="mb-20">
+                  <div 
+                    className={`${r.problemSize} font-light mb-12 tracking-wider animate-pulse`}
+                    style={{ 
+                      color: colors.text, 
+                      fontFamily: 'Georgia, serif',
+                      animationDuration: '3s',
+                      animationIterationCount: '1',
+                      textShadow: `0 4px 20px ${colors.shadowRich}`
+                    }}
+                  >
+                    {currentProblem.num1} {getOperationSymbol(currentProblem.operation)} {currentProblem.num2}
+                  </div>
+                  <div className="h-1 w-24 mx-auto bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+                </div>
+                
+                <div className="mb-20 relative">
+                  <Sparkle show={showSparkle} />
+                  <div 
+                    className={`relative ${r.answerSize} font-light min-h-[160px] flex items-center justify-center transition-all duration-500 ${
+                      showFeedback 
+                        ? isCorrect ? 'scale-110' : 'scale-90'
+                        : 'scale-100'
+                    }`} 
+                    style={{ 
+                      color: showFeedback ? (isCorrect ? colors.successText : colors.errorText) : colors.text,
+                      fontFamily: 'Georgia, serif',
+                      textShadow: showFeedback ? `0 8px 32px ${isCorrect ? colors.success : colors.error}` : 'none'
+                    }}
+                  >
+                    {showFeedback 
+                      ? currentProblem.correctAnswer
+                      : userAnswer || (
+                        <span style={{ 
+                          opacity: 0.3, 
+                          borderBottom: `3px solid ${colors.border}`, 
+                          paddingBottom: '12px',
+                          animation: 'pulse 2s infinite'
+                        }}>
+                          {getExpectedDigits(currentProblem.correctAnswer) === 1 ? '_' : '__'}
+                        </span>
+                      )}
+                  </div>
+                  
+                  {userAnswer && !showFeedback && (
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-12 h-2 overflow-hidden rounded-full" 
+                         style={{ backgroundColor: colors.surface }}>
+                      <div 
+                        className="h-full transition-all duration-500 bg-gradient-to-r from-blue-400 to-green-400"
+                        style={{ 
+                          width: `${(userAnswer.length / getExpectedDigits(currentProblem.correctAnswer)) * 100}%`
+                        }}
+                      ></div>
+                    </div>
+                  )}
+                  
+                  {showFeedback && !isCorrect && userAnswer && (
+                    <div 
+                      className="text-lg font-light mt-4 p-3 rounded-xl"
+                      style={{ 
+                        color: colors.textSecondary, 
+                        fontFamily: 'Inter, -apple-system, sans-serif',
+                        backgroundColor: colors.error,
+                        border: `1px solid ${colors.errorText}20`
+                      }}
+                    >
+                      escribiste: <span style={{ fontFamily: 'Georgia, serif' }}>{userAnswer}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div 
+                  className="text-lg font-light"
+                  style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
+                >
+                  escribe tu respuesta
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      <MobileKeyboard />
     </div>
   );
 
@@ -1632,7 +2280,7 @@ const MathBoost = () => {
             ¡Sesión completada!
           </h1>
           
-          <div className={`${r.cardPadding} rounded-3xl mb-8`} style={liquidGlass}>
+          <div className={`${r.cardPadding} rounded-3xl mb-8 transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <div className="text-center">
                 <div className="text-3xl font-light mb-2" style={{ color: colors.text, fontFamily: 'Georgia, serif' }}>
@@ -1664,27 +2312,21 @@ const MathBoost = () => {
           <div className="flex gap-4 justify-center">
             <button
               onClick={() => setGameMode('setup')}
-              className="px-8 py-3 text-lg font-medium rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95"
+              className="px-8 py-3 text-lg font-medium rounded-2xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
               style={{
-                ...liquidGlass,
                 color: colors.text,
                 fontFamily: 'Inter, -apple-system, sans-serif'
               }}
-              onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-              onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
             >
               Otra sesión
             </button>
             <button
               onClick={() => setGameMode('welcome')}
-              className="px-8 py-3 text-lg font-medium rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95"
+              className="px-8 py-3 text-lg font-medium rounded-2xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
               style={{
-                ...liquidGlass,
                 color: colors.text,
                 fontFamily: 'Inter, -apple-system, sans-serif'
               }}
-              onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-              onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
             >
               Ir al inicio
             </button>
@@ -1701,18 +2343,18 @@ const MathBoost = () => {
     return (
       <div style={{ backgroundColor: colors.background }} className="min-h-screen pt-24">
         <NavigationHeader showBack={true} onBack={() => setGameMode('tricks')} />
-        <div className={`flex items-center justify-center min-h-screen ${r.padding}`}>
+        <div className={`flex items-center justify-center ${r.gamePadding} ${screenSize === 'mobile' ? 'min-h-[calc(100vh-6rem)]' : 'min-h-screen'}`}>
           <div className="max-w-3xl w-full text-center">
-            <div className="mb-16">
-              <div className="text-6xl mb-4">{trick?.emoji}</div>
+            <div className={`${screenSize === 'mobile' ? 'mb-8' : 'mb-16'}`}>
+              <div className={`${screenSize === 'mobile' ? 'text-4xl' : 'text-6xl'} mb-4`}>{trick?.emoji}</div>
               <h2 
-                className="text-3xl font-light mb-4" 
+                className={`${screenSize === 'mobile' ? 'text-2xl' : 'text-3xl'} font-light mb-4`}
                 style={{ color: colors.text, fontFamily: 'Inter, -apple-system, sans-serif' }}
               >
                 {trick?.title}
               </h2>
               <p 
-                className="text-lg font-light" 
+                className={`${screenSize === 'mobile' ? 'text-base' : 'text-lg'} font-light`}
                 style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
               >
                 {trick?.method}
@@ -1720,10 +2362,10 @@ const MathBoost = () => {
             </div>
             
             {currentProblem && !sessionEnded && (
-              <>
-                <div className="mb-20">
+              <div className={r.gameSpacing}>
+                <div className={`${screenSize === 'mobile' ? 'mb-8' : 'mb-20'}`}>
                   <div 
-                    className="text-9xl font-light mb-12 tracking-wider" 
+                    className={`${r.problemSize} font-light ${screenSize === 'mobile' ? 'mb-6' : 'mb-12'} tracking-wider`}
                     style={{ color: colors.text, fontFamily: 'Georgia, serif' }}
                   >
                     {currentProblem.trick === 'square-ending-5' 
@@ -1736,10 +2378,10 @@ const MathBoost = () => {
                   <div className="h-1 w-24 mx-auto bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
                 </div>
                 
-                <div className="mb-20 relative">
+                <div className={`${screenSize === 'mobile' ? 'mb-12' : 'mb-20'} relative`}>
                   <Sparkle show={showSparkle} />
                   <div 
-                    className={`text-9xl font-light min-h-[160px] flex items-center justify-center transition-all duration-500 ${
+                    className={`${r.answerSize} font-light ${screenSize === 'mobile' ? 'min-h-[120px]' : 'min-h-[160px]'} flex items-center justify-center transition-all duration-500 ${
                       showFeedback 
                         ? isCorrect ? 'scale-110' : 'scale-90'
                         : 'scale-100'
@@ -1752,7 +2394,11 @@ const MathBoost = () => {
                     {showFeedback 
                       ? currentProblem.correctAnswer
                       : userAnswer || (
-                        <span style={{ opacity: 0.3, borderBottom: `3px solid ${colors.border}`, paddingBottom: '12px' }}>
+                        <span style={{ 
+                          opacity: 0.3, 
+                          borderBottom: `3px solid ${colors.border}`, 
+                          paddingBottom: screenSize === 'mobile' ? '8px' : '12px'
+                        }}>
                           aplica el método
                         </span>
                       )}
@@ -1760,7 +2406,7 @@ const MathBoost = () => {
                   
                   {showFeedback && (
                     <div 
-                      className="text-lg font-light mt-6" 
+                      className={`${screenSize === 'mobile' ? 'text-base' : 'text-lg'} font-light mt-4`}
                       style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
                     >
                       {isCorrect ? '✨ método aplicado correctamente' : '🤔 revisa el procedimiento'}
@@ -1769,7 +2415,7 @@ const MathBoost = () => {
                 </div>
 
                 <div 
-                  className="text-lg font-light p-6 rounded-2xl" 
+                  className={`${screenSize === 'mobile' ? 'text-sm' : 'text-lg'} font-light p-4 rounded-2xl`}
                   style={{ 
                     color: colors.textSecondary, 
                     backgroundColor: colors.surface,
@@ -1779,10 +2425,11 @@ const MathBoost = () => {
                 >
                   {trick?.example}
                 </div>
-              </>
+              </div>
             )}
           </div>
         </div>
+        <MobileKeyboard />
       </div>
     );
   };
@@ -1794,431 +2441,427 @@ const MathBoost = () => {
     return (
       <div style={{ backgroundColor: colors.background }} className="min-h-screen pt-24">
         <NavigationHeader />
-        <div className={`flex items-center justify-center min-h-screen ${r.padding}`}>
-          <div className="max-w-6xl w-full">
-            <div className="text-center mb-20">
+        <div className={`${screenSize === 'mobile' ? 'px-4 pb-8' : 'flex items-center justify-center min-h-screen'} ${r.padding}`}>
+          <div className={`${screenSize === 'mobile' ? 'w-full' : 'max-w-6xl w-full'}`}>
+            {/* Header - Compact on mobile */}
+            <div className={`text-center ${screenSize === 'mobile' ? 'mb-8' : 'mb-20'}`}>
               <h1 
-                className="text-4xl font-light mb-6" 
+                className={`${getTypeSize('h1', screenSize)} font-light ${screenSize === 'mobile' ? 'mb-3' : 'mb-6'}`}
                 style={{ color: colors.text, fontFamily: 'Inter, -apple-system, sans-serif' }}
               >
                 estadísticas avanzadas
               </h1>
               <p 
-                className="text-lg font-light" 
+                className={`${getTypeSize('body', screenSize)} font-light`}
                 style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
               >
                 análisis profundo de tu evolución matemática
               </p>
             </div>
 
-            <div className={`${r.cardPadding} rounded-3xl mb-12`} style={liquidGlass}>
-              <div className="flex items-center gap-4 mb-6">
-                <div className="text-3xl">{user.avatar}</div>
+            {/* Profile Card - Compact on mobile */}
+            <div className={`${screenSize === 'mobile' ? 'p-4 mb-6' : r.cardPadding} rounded-3xl ${screenSize === 'mobile' ? 'mb-6' : 'mb-12'} transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
+              <div className={`flex items-center ${screenSize === 'mobile' ? 'gap-3' : 'gap-4'} ${screenSize === 'mobile' ? 'mb-4' : 'mb-6'}`}>
+                <div className={`${screenSize === 'mobile' ? 'text-2xl' : 'text-3xl'}`}>{user.avatar}</div>
                 <div>
-                  <h3 className="text-lg font-medium capitalize" style={{ color: colors.text }}>
+                  <h3 className={`${getTypeSize('cardTitle', screenSize)} font-medium capitalize`} style={{ color: colors.text }}>
                     {user.name}
                   </h3>
-                  <p className="text-base" style={{ color: colors.textSecondary }}>
+                  <p className={`${getTypeSize('body', screenSize)}`} style={{ color: colors.textSecondary }}>
                     {getUserLevelName(user)} • Nivel {user.currentLevel}
                   </p>
                 </div>
               </div>
-              <div className="mb-6 p-4 rounded-xl" style={{ backgroundColor: colors.accent }}>
-                <h4 className="text-base font-medium mb-3" style={{ color: colors.text }}>
+              <div className={`${screenSize === 'mobile' ? 'p-3' : 'p-4'} rounded-xl`} style={{ backgroundColor: colors.accent }}>
+                <h4 className={`${getTypeSize('h3', screenSize)} font-medium ${screenSize === 'mobile' ? 'mb-2' : 'mb-3'}`} style={{ color: colors.text }}>
                   Perfil de calculadora mental
                 </h4>
-                <p className="text-base leading-relaxed" style={{ color: colors.textSecondary }}>
+                <p className={`${getTypeSize('body', screenSize)} leading-relaxed`} style={{ color: colors.textSecondary }}>
                   {user.personalProfile}
                 </p>
               </div>
             </div>
 
-            <div className={`${r.cardPadding} rounded-3xl mb-12`} style={liquidGlass}>
-              <h3 className="text-lg font-medium mb-8 text-center" style={{ color: colors.text }}>
+            {/* Weekly Evolution - Restored from WelcomeScreen */}
+            <div className={`${screenSize === 'mobile' ? 'p-4 mb-6' : r.cardPadding} rounded-3xl ${screenSize === 'mobile' ? 'mb-6' : 'mb-12'} transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
+              <div className={`grid ${screenSize === 'mobile' ? 'grid-cols-1 gap-4' : 'grid-cols-2 gap-6'}`}>
+                <div className={`${screenSize === 'mobile' ? 'p-3' : 'p-4'} rounded-2xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="text-2xl group-hover:scale-110 transition-transform duration-300">📊</div>
+                      <h3 className={`${getTypeSize('h3', screenSize)} font-medium`} style={{ color: colors.text }}>
+                        Problemas semanales
+                      </h3>
+                    </div>
+                  </div>
+                  <div className="mb-4">
+                    <div className="flex items-baseline gap-2 mb-3">
+                      <span className={`${screenSize === 'mobile' ? 'text-2xl' : 'text-3xl'} font-light`} style={{ color: colors.text, fontFamily: 'Georgia, serif' }}>
+                        {user.totalProblemsThisWeek.toLocaleString()}
+                      </span>
+                      <span className={`${getTypeSize('body', screenSize)}`} style={{ color: colors.textSecondary }}>
+                        / {getWeeklyProblemsGoal(user).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-blue-400 to-blue-600 rounded-full transition-all duration-1000"
+                        style={{ width: `${Math.min(100, (user.totalProblemsThisWeek / getWeeklyProblemsGoal(user)) * 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  <p className={`${getTypeSize('caption', screenSize)} text-center`} style={{ color: colors.textSecondary }}>
+                    {getWeeklyProblemsGoal(user) - user.totalProblemsThisWeek > 0 
+                      ? `${(getWeeklyProblemsGoal(user) - user.totalProblemsThisWeek).toLocaleString()} para completar meta`
+                      : '¡Meta semanal completada! 🎉'
+                    }
+                  </p>
+                </div>
+
+                <div className={`${screenSize === 'mobile' ? 'p-3' : 'p-4'} rounded-2xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="text-2xl group-hover:scale-110 transition-transform duration-300">⚡</div>
+                      <h3 className={`${getTypeSize('h3', screenSize)} font-medium`} style={{ color: colors.text }}>
+                        Velocidad objetivo
+                      </h3>
+                    </div>
+                  </div>
+                  <div className="mb-4">
+                    <div className="flex items-baseline gap-2 mb-3">
+                      <span className={`${screenSize === 'mobile' ? 'text-2xl' : 'text-3xl'} font-light`} style={{ color: colors.text, fontFamily: 'Georgia, serif' }}>
+                        {user.averageResponseTime || 0}s
+                      </span>
+                      <span className={`${getTypeSize('body', screenSize)}`} style={{ color: colors.textSecondary }}>
+                        / {getWeeklySpeedGoal(user)}s
+                      </span>
+                    </div>
+                    <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-green-400 to-green-600 rounded-full transition-all duration-1000"
+                        style={{ 
+                          width: user.averageResponseTime > 0 
+                            ? `${Math.min(100, Math.max(0, (getWeeklySpeedGoal(user) - user.averageResponseTime) / getWeeklySpeedGoal(user) * 100))}%`
+                            : '0%'
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                  <p className={`${getTypeSize('caption', screenSize)} text-center`} style={{ color: colors.textSecondary }}>
+                    {user.averageResponseTime > 0 && user.averageResponseTime <= getWeeklySpeedGoal(user)
+                      ? '¡Objetivo de velocidad alcanzado! 🎯'
+                      : user.averageResponseTime > 0
+                        ? `Mejora ${(user.averageResponseTime - getWeeklySpeedGoal(user)).toFixed(1)}s para meta`
+                        : 'Comienza a entrenar para ver tu progreso'
+                    }
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Level System - Carousel on mobile with timeline */}
+            <div className={`${screenSize === 'mobile' ? 'p-4 mb-6' : r.cardPadding} rounded-3xl ${screenSize === 'mobile' ? 'mb-6' : 'mb-12'} transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
+              <h3 className={`${getTypeSize('h3', screenSize)} font-medium ${screenSize === 'mobile' ? 'mb-4' : 'mb-8'} text-center`} style={{ color: colors.text }}>
                 Sistema de progresión
               </h3>
               
               {!showFullLevelSystem ? (
                 <div className="relative">
-                  <div className="flex items-center justify-between mb-6">
-                    {[1, 3, 6, 9, 12, 15].map((levelNum, index) => {
-                      const level = levelSystem[levelNum - 1];
-                      const isActive = levelNum === user.currentLevel;
-                      const isCompleted = levelNum < user.currentLevel;
-                      
-                      return (
-                        <div key={levelNum} className="flex flex-col items-center relative">
-                          {index < 5 && (
+                  {/* Responsive carousel with consistent styling */}
+                  <div className={`overflow-x-auto scrollbar-hide ${r.carouselPadding}`}>
+                    <div className={`flex ${r.carouselGap} pb-6`} style={{ minWidth: 'max-content' }}>
+                      {[1, 3, 6, 9, 12, 15].map((levelNum, index) => {
+                        const level = levelSystem[levelNum - 1];
+                        const isActive = levelNum === user.currentLevel;
+                        const isCompleted = levelNum < user.currentLevel;
+                        
+                        return (
+                          <div key={levelNum} className="flex flex-col items-center relative" style={{ minWidth: screenSize === 'mobile' ? '90px' : screenSize === 'tablet' ? '120px' : '140px' }}>
+                            {/* Timeline connector */}
+                            {index < 5 && (
+                              <div 
+                                className={`absolute ${screenSize === 'mobile' ? 'top-5' : 'top-6'} left-full w-full h-0.5 z-0`}
+                                style={{ 
+                                  backgroundColor: isCompleted ? colors.primary : colors.border,
+                                  width: screenSize === 'mobile' ? 'calc(100% + 24px)' : 'calc(100% + 32px)'
+                                }}
+                              />
+                            )}
                             <div 
-                              className="absolute top-6 left-full w-full h-0.5"
-                              style={{ 
-                                backgroundColor: isCompleted ? colors.primary : colors.border,
-                                width: 'calc(100vw / 6)'
+                              className={`${screenSize === 'mobile' ? 'w-10 h-10' : screenSize === 'tablet' ? 'w-12 h-12' : 'w-14 h-14'} rounded-full flex items-center justify-center ${screenSize === 'mobile' ? 'text-sm' : 'text-lg'} transition-all duration-300 relative z-10 ${
+                                isActive ? 'scale-110' : ''
+                              }`}
+                              style={{
+                                backgroundColor: isActive 
+                                  ? colors.primary 
+                                  : isCompleted 
+                                    ? colors.primaryLight 
+                                    : colors.surface,
+                                border: `2px solid ${isActive ? colors.primary : colors.border}`,
+                                color: isActive ? 'white' : colors.text
                               }}
-                            />
-                          )}
-                          <div 
-                            className={`w-12 h-12 rounded-full flex items-center justify-center text-lg transition-all duration-300 ${
-                              isActive ? 'scale-110' : ''
-                            }`}
-                            style={{
-                              backgroundColor: isActive 
-                                ? colors.primary 
-                                : isCompleted 
-                                  ? colors.primaryLight 
-                                  : colors.surface,
-                              border: `2px solid ${isActive ? colors.primary : colors.border}`,
-                              color: isActive ? 'white' : colors.text
-                            }}
-                          >
-                            {level.emoji}
-                          </div>
-                          <div className="mt-2 text-center">
-                            <div className={`text-sm font-medium ${isActive ? 'font-bold' : ''}`} style={{ color: colors.text }}>
-                              Nivel {levelNum}
+                            >
+                              {level.emoji}
                             </div>
-                            <div className="text-xs" style={{ color: colors.textSecondary }}>
-                              {level.category}
+                            <div className="mt-2 text-center">
+                              <div className={`${screenSize === 'mobile' ? getTypeSize('caption', screenSize) : getTypeSize('body', screenSize)} font-medium ${isActive ? 'font-bold' : ''}`} style={{ color: colors.text }}>
+                                {screenSize === 'mobile' ? level.name.split(' ')[0] : level.name}
+                              </div>
+                              <div className={`${getTypeSize('caption', screenSize)}`} style={{ color: colors.textSecondary }}>
+                                {screenSize === 'mobile' ? level.level : `Nivel ${level.level}`}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  
-                  <div className="mt-8 p-4 rounded-xl" style={{ backgroundColor: colors.accent }}>
-                    <div className="flex justify-between items-center mb-3">
-                      <div>
-                        <h4 className="text-lg font-medium" style={{ color: colors.text }}>
-                          {getUserLevelName(user)}
-                        </h4>
-                        <p className="text-sm" style={{ color: colors.textSecondary }}>
-                          Nivel {user.currentLevel} • {user.nextLevelProblems} problemas para siguiente nivel
-                        </p>
-                      </div>
-                      <div className="text-2xl">{getUserLevelData(user)?.emoji}</div>
-                    </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-purple-400 to-purple-600 rounded-full transition-all duration-1000"
-                        style={{ width: `${Math.min(100, ((user.totalProblemsLifetime % 1000) / 1000) * 100)}%` }}
-                      ></div>
+                        );
+                      })}
                     </div>
                   </div>
                   
-                  <div className="text-center mt-6">
+                  <div className="text-center">
                     <button
                       onClick={() => setShowFullLevelSystem(true)}
-                      className="text-sm px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105"
+                      className={`${screenSize === 'mobile' ? 'px-4 py-2' : 'px-6 py-2'} ${getTypeSize('button', screenSize)} font-medium rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}
                       style={{
-                        color: colors.primary,
-                        backgroundColor: colors.primaryLight,
+                        color: colors.text,
                         fontFamily: 'Inter, -apple-system, sans-serif'
                       }}
                     >
-                      Ver todos los niveles
+                      Ver sistema completo
                     </button>
                   </div>
                 </div>
               ) : (
-                <div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-                    {levelSystem.map((level, index) => (
+                <div className="space-y-6">
+                  {levelSystem.map((level, index) => {
+                    const isActive = level.level === user.currentLevel;
+                    const isCompleted = level.level < user.currentLevel;
+                    
+                    return (
                       <div 
-                        key={level.level}
-                        className={`p-3 rounded-xl text-center transition-all duration-300 ${
-                          level.level === user.currentLevel ? 'scale-105' : 'hover:scale-102'
+                        key={level.level} 
+                        className={`${screenSize === 'mobile' ? 'p-3' : 'p-4'} rounded-xl transition-all duration-300 ${
+                          isActive ? 'scale-105' : 'hover:scale-102'
                         }`}
                         style={{
-                          backgroundColor: level.level === user.currentLevel 
+                          backgroundColor: isActive 
                             ? colors.accentActive 
-                            : level.level < user.currentLevel 
-                              ? colors.surface 
-                              : colors.accent,
-                          border: level.level === user.currentLevel 
-                            ? `2px solid ${colors.primary}` 
-                            : `1px solid ${colors.border}`
+                            : isCompleted 
+                              ? colors.accent 
+                              : colors.surface,
+                          border: `1px solid ${isActive ? colors.primary : colors.border}`
                         }}
                       >
-                        <div className="text-xl mb-1">{level.emoji}</div>
-                        <div className="text-xs font-medium mb-1" style={{ color: colors.text }}>
-                          Nivel {level.level}
-                        </div>
-                        <div className="text-xs mb-1" style={{ color: colors.textSecondary }}>
-                          {level.category}
-                        </div>
-                        <div className="text-xs" style={{ color: colors.textTertiary }}>
-                          {level.weeklyProblemsMin}-{level.weeklyProblemsMax}
-                        </div>
-                        <div className="text-xs" style={{ color: colors.textTertiary }}>
-                          ⚡ {level.speedTarget}s
+                        <div className="flex items-center gap-4">
+                          <div className={`${screenSize === 'mobile' ? 'text-xl' : 'text-2xl'} ${isActive ? 'scale-110' : ''} transition-transform duration-300`}>
+                            {level.emoji}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className={`${getTypeSize('cardTitle', screenSize)} font-medium ${isActive ? 'font-bold' : ''}`} style={{ color: colors.text }}>
+                                {level.name}
+                              </h4>
+                              <span className={`${screenSize === 'mobile' ? 'text-xs px-1 py-0.5' : 'text-xs px-2 py-1'} rounded-full`} style={{ 
+                                backgroundColor: colors.primaryLight, 
+                                color: colors.primary 
+                              }}>
+                                {level.category}
+                              </span>
+                            </div>
+                            <div className={`${getTypeSize('caption', screenSize)}`} style={{ color: colors.textSecondary }}>
+                              {level.weeklyProblemsMin}-{level.weeklyProblemsMax} problemas/semana • {level.speedTarget}s objetivo
+                            </div>
+                          </div>
+                          {isActive && (
+                            <div className={`${getTypeSize('caption', screenSize)} font-medium`} style={{ color: colors.primary }}>
+                              Actual
+                            </div>
+                          )}
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })}
                   
                   <div className="text-center">
                     <button
                       onClick={() => setShowFullLevelSystem(false)}
-                      className="text-sm px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105"
+                      className={`${screenSize === 'mobile' ? 'px-4 py-2' : 'px-6 py-2'} ${getTypeSize('button', screenSize)} font-medium rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}
                       style={{
-                        color: colors.textSecondary,
-                        backgroundColor: colors.surface,
+                        color: colors.text,
                         fontFamily: 'Inter, -apple-system, sans-serif'
                       }}
                     >
-                      Ocultar detalles
+                      Ver vista resumida
                     </button>
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-              <div className={`${r.cardPadding} rounded-3xl`} style={liquidGlass}>
-                <h3 className="text-lg font-medium mb-6 flex items-center gap-3" style={{ color: colors.text }}>
-                  <div className="text-2xl">💪</div>
-                  Fortalezas
-                </h3>
-                <div className="space-y-3">
-                  {user.strengths && user.strengths.length > 0 ? user.strengths.map((strength, index) => (
-                    <div key={index} className="flex items-center gap-3 p-3 rounded-lg" style={{ backgroundColor: colors.surface }}>
-                      <div className="text-green-500">✅</div>
-                      <span className="text-base" style={{ color: colors.text }}>{strength}</span>
-                    </div>
-                  )) : (
-                    <div className="flex items-center gap-3 p-3 rounded-lg" style={{ backgroundColor: colors.surface }}>
-                      <div className="text-gray-400">📈</div>
-                      <span className="text-base" style={{ color: colors.textSecondary }}>¡Entrena para descubrir tus fortalezas!</span>
-                    </div>
-                  )}
+            {/* Performance Analysis - Single column on mobile */}
+            <div className={`${screenSize === 'mobile' ? 'p-4 mb-6' : r.cardPadding} rounded-3xl ${screenSize === 'mobile' ? 'mb-6' : 'mb-12'} transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
+              <h3 className={`${getTypeSize('h3', screenSize)} font-medium ${screenSize === 'mobile' ? 'mb-4' : 'mb-8'} text-center`} style={{ color: colors.text }}>
+                Análisis de rendimiento
+              </h3>
+              
+              <div className={`grid ${screenSize === 'mobile' ? 'grid-cols-1 gap-4' : 'grid-cols-1 md:grid-cols-2 gap-6'}`}>
+                <div>
+                  <h4 className={`${getTypeSize('cardTitle', screenSize)} font-medium ${screenSize === 'mobile' ? 'mb-3' : 'mb-4'}`} style={{ color: colors.text }}>Fortalezas</h4>
+                  <div className="space-y-2">
+                    {user.strengths.length > 0 ? (
+                      user.strengths.map((strength, index) => (
+                        <div key={index} className={`flex items-center gap-2 ${screenSize === 'mobile' ? 'p-2' : 'p-2'} rounded-lg`} style={{ backgroundColor: colors.success }}>
+                          <div className={`${getTypeSize('caption', screenSize)}`}>💪</div>
+                          <div className={`${getTypeSize('caption', screenSize)}`} style={{ color: colors.successText }}>{strength}</div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className={`${getTypeSize('caption', screenSize)} ${screenSize === 'mobile' ? 'p-2' : 'p-3'} rounded-lg text-center`} style={{ color: colors.textSecondary, backgroundColor: colors.surface }}>
+                        ¡Comienza a entrenar para descubrir tus fortalezas!
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-
-              <div className={`${r.cardPadding} rounded-3xl`} style={liquidGlass}>
-                <h3 className="text-lg font-medium mb-6 flex items-center gap-3" style={{ color: colors.text }}>
-                  <div className="text-2xl">🎯</div>
-                  Áreas de mejora
-                </h3>
-                <div className="space-y-3">
-                  {user.weaknesses && user.weaknesses.length > 0 ? user.weaknesses.map((weakness, index) => (
-                    <div key={index} className="flex items-center gap-3 p-3 rounded-lg" style={{ backgroundColor: colors.surface }}>
-                      <div className="text-orange-500">⚠️</div>
-                      <span className="text-base" style={{ color: colors.text }}>{weakness}</span>
-                    </div>
-                  )) : (
-                    <div className="flex items-center gap-3 p-3 rounded-lg" style={{ backgroundColor: colors.surface }}>
-                      <div className="text-gray-400">🎯</div>
-                      <span className="text-base" style={{ color: colors.textSecondary }}>¡Entrena para identificar áreas de mejora!</span>
-                    </div>
-                  )}
+                
+                <div>
+                  <h4 className={`${getTypeSize('cardTitle', screenSize)} font-medium ${screenSize === 'mobile' ? 'mb-3' : 'mb-4'}`} style={{ color: colors.text }}>Áreas de mejora</h4>
+                  <div className="space-y-2">
+                    {user.weaknesses.length > 0 ? (
+                      user.weaknesses.map((weakness, index) => (
+                        <div key={index} className={`flex items-center gap-2 ${screenSize === 'mobile' ? 'p-2' : 'p-2'} rounded-lg`} style={{ backgroundColor: colors.error }}>
+                          <div className={`${getTypeSize('caption', screenSize)}`}>🎯</div>
+                          <div className={`${getTypeSize('caption', screenSize)}`} style={{ color: colors.errorText }}>{weakness}</div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className={`${getTypeSize('caption', screenSize)} ${screenSize === 'mobile' ? 'p-2' : 'p-3'} rounded-lg text-center`} style={{ color: colors.textSecondary, backgroundColor: colors.surface }}>
+                        ¡Excelente! No hay áreas críticas de mejora
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className={`${r.cardPadding} rounded-3xl mb-12`} style={liquidGlass}>
-              <h3 className="text-xl font-medium mb-6" style={{ color: colors.text }}>
-                Análisis de errores comunes
+            {/* Activity Heatmap - Restored from WelcomeScreen */}
+            <div className={`${screenSize === 'mobile' ? 'p-4 mb-6' : r.cardPadding} rounded-3xl ${screenSize === 'mobile' ? 'mb-6' : 'mb-12'} transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
+              <h3 className={`${getTypeSize('h3', screenSize)} font-medium ${screenSize === 'mobile' ? 'mb-4' : 'mb-8'} text-center`} style={{ color: colors.text }}>
+                Patrones de actividad
               </h3>
-              {Object.keys(user.commonMistakes).length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {Object.entries(user.commonMistakes).map(([key, mistake]) => (
-                    <div key={key} className="text-center p-4 rounded-xl" style={{ backgroundColor: colors.surface }}>
-                      <div className="text-2xl font-light mb-2" style={{ color: colors.errorText, fontFamily: 'Georgia, serif' }}>
-                        {mistake.percentage.toFixed(1)}%
-                      </div>
-                      <div className="text-sm mb-1" style={{ color: colors.text }}>
-                        {key.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase())}
-                      </div>
-                      <div className="text-xs" style={{ color: colors.textSecondary }}>
-                        {mistake.errors} de {mistake.total} intentos
+              
+              <div className={`grid ${screenSize === 'mobile' ? 'grid-cols-1 gap-6' : 'grid-cols-1 md:grid-cols-2 gap-8'} mb-8`}>
+                <div>
+                  <h4 className={`${getTypeSize('cardTitle', screenSize)} font-medium ${screenSize === 'mobile' ? 'mb-3' : 'mb-4'}`} style={{ color: colors.text }}>Últimas 4 semanas</h4>
+                  <div className="flex justify-center mb-4">
+                    <div className="grid grid-cols-7 gap-2">
+                      {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((day, index) => (
+                        <div key={index} className={`${getTypeSize('caption', screenSize)} text-center font-medium mb-2`} style={{ color: colors.textSecondary }}>
+                          {day}
+                        </div>
+                      ))}
+                      {user.practiceHeatmap.flat().map((intensity, index) => (
+                        <div
+                          key={index}
+                          className={`${screenSize === 'mobile' ? 'w-3 h-3' : 'w-4 h-4'} rounded transition-all duration-200 hover:scale-110`}
+                          style={{
+                            backgroundColor: 
+                              intensity === 0 ? colors.surface :
+                              intensity === 1 ? `${colors.primary}40` :
+                              intensity === 2 ? `${colors.primary}80` : colors.primary
+                          }}
+                          title={`${intensity} sesiones`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex justify-center items-center gap-4">
+                    <span className={`${getTypeSize('caption', screenSize)} font-light`} style={{ color: colors.textSecondary }}>Menos</span>
+                    <div className="flex gap-1">
+                      {[0, 1, 2, 3].map(intensity => (
+                        <div
+                          key={intensity}
+                          className={`${screenSize === 'mobile' ? 'w-2 h-2' : 'w-3 h-3'} rounded`}
+                          style={{
+                            backgroundColor: 
+                              intensity === 0 ? colors.surface :
+                              intensity === 1 ? `${colors.primary}40` :
+                              intensity === 2 ? `${colors.primary}80` : colors.primary
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <span className={`${getTypeSize('caption', screenSize)} font-light`} style={{ color: colors.textSecondary }}>Más</span>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className={`${getTypeSize('cardTitle', screenSize)} font-medium ${screenSize === 'mobile' ? 'mb-3' : 'mb-4'}`} style={{ color: colors.text }}>Insights de actividad</h4>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <Calendar size={screenSize === 'mobile' ? 16 : 20} color={colors.primary} />
+                      <div>
+                        <div className={`${getTypeSize('body', screenSize)} font-medium`} style={{ color: colors.text }}>Mejores días</div>
+                        <div className={`${getTypeSize('caption', screenSize)}`} style={{ color: colors.textSecondary }}>
+                          {user.activityPatterns.bestDays.length > 0 
+                            ? user.activityPatterns.bestDays.join(', ')
+                            : 'Por descubrir'
+                          }
+                        </div>
                       </div>
                     </div>
-                  ))}
+                    <div className="flex items-center gap-3">
+                      <Clock size={screenSize === 'mobile' ? 16 : 20} color={colors.secondary} />
+                      <div>
+                        <div className={`${getTypeSize('body', screenSize)} font-medium`} style={{ color: colors.text }}>Horas preferidas</div>
+                        <div className={`${getTypeSize('caption', screenSize)}`} style={{ color: colors.textSecondary }}>
+                          {user.activityPatterns.bestHours.length > 0 
+                            ? user.activityPatterns.bestHours.join(', ')
+                            : 'Por descubrir'
+                          }
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Target size={screenSize === 'mobile' ? 16 : 20} color={colors.primary} />
+                      <div>
+                        <div className={`${getTypeSize('body', screenSize)} font-medium`} style={{ color: colors.text }}>Sesión promedio</div>
+                        <div className={`${getTypeSize('caption', screenSize)}`} style={{ color: colors.textSecondary }}>
+                          {user.activityPatterns.avgSessionLength}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Common Mistakes - Compact on mobile */}
+            <div className={`${screenSize === 'mobile' ? 'p-4 mb-6' : r.cardPadding} rounded-3xl ${screenSize === 'mobile' ? 'mb-6' : 'mb-12'} transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
+              <h3 className={`${getTypeSize('h3', screenSize)} font-medium ${screenSize === 'mobile' ? 'mb-4' : 'mb-8'} text-center`} style={{ color: colors.text }}>
+                Errores más comunes
+              </h3>
+              
+              {Object.keys(user.commonMistakes).length > 0 ? (
+                <div className={`space-y-${screenSize === 'mobile' ? '2' : '4'}`}>
+                  {Object.entries(user.commonMistakes)
+                    .sort(([,a], [,b]) => b - a)
+                    .slice(0, 5)
+                    .map(([mistake, count]) => (
+                      <div key={mistake} className={`flex items-center justify-between ${screenSize === 'mobile' ? 'p-2' : 'p-3'} rounded-lg`} style={{ backgroundColor: colors.surface }}>
+                        <div className={`${getTypeSize('caption', screenSize)} font-medium`} style={{ color: colors.text }}>
+                          {mistake}
+                        </div>
+                        <div className={`${getTypeSize('caption', screenSize)}`} style={{ color: colors.textSecondary }}>
+                          {count} veces
+                        </div>
+                      </div>
+                    ))}
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <div className="text-4xl mb-4">📊</div>
-                  <p className="text-lg" style={{ color: colors.textSecondary }}>
-                    ¡Comienza a entrenar para ver tu análisis de errores!
-                  </p>
+                <div className={`text-center ${screenSize === 'mobile' ? 'p-4' : 'p-6'}`} style={{ color: colors.textSecondary }}>
+                  <div className={`${screenSize === 'mobile' ? 'text-xl' : 'text-2xl'} mb-2`}>🎉</div>
+                  <div className={`${getTypeSize('caption', screenSize)}`}>¡Perfecto! No hay errores recurrentes</div>
                 </div>
               )}
-            </div>
-
-            <div className={`${r.cardPadding} rounded-3xl mb-8`} style={liquidGlass}>
-              <h3 className="text-lg font-medium mb-8 text-center" style={{ color: colors.text }}>
-                Evolución semanal
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-8">
-                <div>
-                  <p className="text-base text-center mb-6" style={{ color: colors.textSecondary }}>esta semana</p>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="group text-center">
-                      <div 
-                        className="text-4xl font-light mb-2 transition-all duration-300 group-hover:scale-110" 
-                        style={{ color: colors.text, fontFamily: 'Georgia, serif' }}
-                      >
-                        {user.sessionsThisWeek}
-                      </div>
-                      <div 
-                        className="text-sm tracking-wide uppercase" 
-                        style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
-                      >
-                        sesiones
-                      </div>
-                    </div>
-                    <div className="group text-center">
-                      <div 
-                        className="text-4xl font-light mb-2 transition-all duration-300 group-hover:scale-110" 
-                        style={{ color: colors.text, fontFamily: 'Georgia, serif' }}
-                      >
-                        {user.totalProblemsThisWeek}
-                      </div>
-                      <div 
-                        className="text-sm tracking-wide uppercase" 
-                        style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
-                      >
-                        problemas
-                      </div>
-                    </div>
-                    <div className="group text-center">
-                      <div 
-                        className="text-4xl font-light mb-2 transition-all duration-300 group-hover:scale-110" 
-                        style={{ color: colors.text, fontFamily: 'Georgia, serif' }}
-                      >
-                        {user.averageResponseTime || 0}s
-                      </div>
-                      <div 
-                        className="text-sm tracking-wide uppercase" 
-                        style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
-                      >
-                        velocidad
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-base text-center mb-6" style={{ color: colors.textSecondary }}>semana pasada</p>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="text-center">
-                      <div 
-                        className="text-3xl font-light mb-2 opacity-60" 
-                        style={{ color: colors.text, fontFamily: 'Georgia, serif' }}
-                      >
-                        {user.sessionsLastWeek}
-                      </div>
-                      <div 
-                        className="text-sm tracking-wide uppercase opacity-60" 
-                        style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
-                      >
-                        sesiones
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <div 
-                        className="text-3xl font-light mb-2 opacity-60" 
-                        style={{ color: colors.text, fontFamily: 'Georgia, serif' }}
-                      >
-                        {user.totalProblemsLastWeek}
-                      </div>
-                      <div 
-                        className="text-sm tracking-wide uppercase opacity-60" 
-                        style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
-                      >
-                        problemas
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <div 
-                        className="text-3xl font-light mb-2 opacity-60" 
-                        style={{ color: colors.text, fontFamily: 'Georgia, serif' }}
-                      >
-                        {user.lastWeekResponseTime || 0}s
-                      </div>
-                      <div 
-                        className="text-sm tracking-wide uppercase opacity-60" 
-                        style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
-                      >
-                        velocidad
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {user.sessionsLastWeek > 0 && (
-                <div className="pt-6 border-t border-gray-200 flex justify-center gap-8">
-                  <div className="text-center">
-                    <div className="text-base font-light" style={{ color: colors.successText }}>
-                      +{((user.sessionsThisWeek - user.sessionsLastWeek) / user.sessionsLastWeek * 100).toFixed(0)}% sesiones
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-base font-light" style={{ color: colors.successText }}>
-                      +{((user.totalProblemsThisWeek - user.totalProblemsLastWeek) / Math.max(user.totalProblemsLastWeek, 1) * 100).toFixed(0)}% problemas
-                    </div>
-                  </div>
-                  {user.lastWeekResponseTime > 0 && user.averageResponseTime > 0 && (
-                    <div className="text-center">
-                      <div className="text-base font-light" style={{ color: colors.successText }}>
-                        {user.averageResponseTime < user.lastWeekResponseTime ? '-' : '+'}
-                        {Math.abs((user.lastWeekResponseTime - user.averageResponseTime) / user.lastWeekResponseTime * 100).toFixed(0)}% tiempo
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              <div className="h-px bg-gray-200 my-8"></div>
-              
-              <div className="text-center mb-6">
-                <p className="text-base font-light mb-6" style={{ color: colors.textSecondary }}>
-                  sesión actual
-                </p>
-              </div>
-              
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
-                {[
-                  { label: 'correctas', value: stats.correct, suffix: '', emoji: '✅' },
-                  { label: 'precisión', value: stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0, suffix: '%', emoji: '🎯' },
-                  { label: 'racha', value: stats.streak, suffix: '', emoji: '🔥' },
-                  { label: 'velocidad', value: stats.total > 0 ? formatTime(stats.averageTime) : '0', suffix: 's', emoji: '⚡' }
-                ].map((stat, index) => (
-                  <div key={index} className="text-center group">
-                    <div className="text-4xl mb-4">{stat.emoji}</div>
-                    <div 
-                      className="text-6xl font-light mb-4 group-hover:scale-110 transition-transform duration-300" 
-                      style={{ color: colors.text, fontFamily: 'Georgia, serif' }}
-                    >
-                      {stat.value}{stat.suffix}
-                    </div>
-                    <div 
-                      className="text-sm font-medium uppercase tracking-widest" 
-                      style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
-                    >
-                      {stat.label}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="text-center">
-              <button
-                onClick={() => setGameMode('setup')}
-                className="group px-12 py-4 text-lg font-medium rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95"
-                style={{
-                  ...liquidGlass,
-                  color: colors.text,
-                  fontFamily: 'Inter, -apple-system, sans-serif'
-                }}
-                onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-                onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
-              >
-                continuar entrenando
-              </button>
             </div>
           </div>
         </div>
@@ -2230,144 +2873,107 @@ const MathBoost = () => {
   const TricksScreen = () => (
     <div style={{ backgroundColor: colors.background }} className="min-h-screen pt-24">
       <NavigationHeader />
-      <div className={`flex items-center justify-center min-h-screen ${r.padding}`}>
-        <div className="max-w-7xl w-full">
-          <div className="text-center mb-20">
-            <h1 
-              className="text-4xl font-light mb-6" 
-              style={{ color: colors.text, fontFamily: 'Inter, -apple-system, sans-serif' }}
+      <div className={`${r.padding} max-w-6xl mx-auto`}>
+        <div className="text-center mb-16">
+          <h1 
+            className={`${getTypeSize('h1', screenSize)} font-light mb-6`}
+            style={{ color: colors.text, fontFamily: 'Inter, -apple-system, sans-serif' }}
+          >
+            trucos matemáticos
+          </h1>
+          <p 
+            className={`${getTypeSize('body', screenSize)} font-light`}
+            style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
+          >
+            técnicas mentales para acelerar tus cálculos
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {mathTricks.map((trick) => (
+            <div 
+              key={trick.id}
+              className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}
             >
-              métodos de cálculo
-            </h1>
-            <p 
-              className="text-lg font-light" 
-              style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
-            >
-              técnicas para acelerar tu pensamiento matemático
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {mathTricks.map((trick, index) => (
-              <div 
-                key={trick.id} 
-                className={`group ${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95`} 
-                style={liquidGlass}
-                onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-                onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
-              >
-                <div className="flex items-start justify-between mb-6">
-                  <div 
-                    className="text-sm font-medium px-3 py-1 rounded-full"
-                    style={{ backgroundColor: colors.accentActive, color: colors.text, fontFamily: 'Inter, -apple-system, sans-serif' }}
-                  >
-                    {trick.difficulty === 1 ? 'básico' : trick.difficulty === 2 ? 'intermedio' : 'avanzado'}
-                  </div>
-                  <div 
-                    className="text-sm font-light" 
-                    style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
-                  >
-                    {index + 1}
-                  </div>
+              <div className="text-center mb-6">
+                <div className="text-4xl mb-4">{trick.emoji}</div>
+                <h3 className={`${getTypeSize('cardTitle', screenSize)} font-medium mb-2`} style={{ color: colors.text }}>
+                  {trick.title}
+                </h3>
+                <div className={`${getTypeSize('caption', screenSize)} px-3 py-1 rounded-full inline-block`} style={{ 
+                  backgroundColor: colors.primaryLight, 
+                  color: colors.primary 
+                }}>
+                  {trick.method}
                 </div>
-                
-                <div className="text-center mb-6">
-                  <div className="text-5xl mb-4 group-hover:scale-110 transition-transform duration-300">{trick.emoji}</div>
-                  <h3 
-                    className="text-xl font-light mb-3" 
-                    style={{ color: colors.text, fontFamily: 'Inter, -apple-system, sans-serif' }}
-                  >
-                    {trick.title}
-                  </h3>
-                  <p 
-                    className="text-base font-light mb-4" 
-                    style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
-                  >
-                    {trick.method}
-                  </p>
-                  <p 
-                    className="text-sm font-light mb-6" 
-                    style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
-                  >
-                    {trick.description}
-                  </p>
-                  <div 
-                    className="text-sm font-light mb-6 p-4 rounded-xl border-l-4" 
-                    style={{ 
-                      backgroundColor: colors.accent, 
-                      color: colors.textSecondary,
-                      fontFamily: 'Inter, -apple-system, sans-serif',
-                      borderColor: colors.accentActive
-                    }}
-                  >
-                    <strong>Cuándo usar:</strong> {trick.useCase}
-                  </div>
-                </div>
-                
-                <div 
-                  className="text-sm mb-8 p-4 rounded-2xl" 
-                  style={{ 
-                    backgroundColor: colors.surface, 
-                    color: colors.textSecondary,
-                    fontFamily: 'Georgia, serif',
-                    border: `1px solid ${colors.border}`
-                  }}
-                >
-                  {trick.example}
-                </div>
-                <button
-                  onClick={() => startTrickPractice(trick.id)}
-                  className="w-full py-3 text-lg font-medium rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95"
-                  style={{
-                    ...liquidGlass,
-                    color: colors.text,
-                    fontFamily: 'Inter, -apple-system, sans-serif'
-                  }}
-                  onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-                  onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
-                >
-                  {trick.emoji} practicar método
-                </button>
               </div>
-            ))}
-          </div>
-          
-          <div className="text-center mt-20">
-            <button
-              onClick={() => setGameMode('setup')}
-              className="group px-12 py-4 text-lg font-medium rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95"
-              style={{
-                ...liquidGlass,
-                color: colors.text,
-                fontFamily: 'Inter, -apple-system, sans-serif'
-              }}
-              onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-              onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
-            >
-              práctica libre
-            </button>
-          </div>
+              
+              <div className="space-y-4 mb-6">
+                <div>
+                  <div className={`${getTypeSize('body', screenSize)} font-medium mb-1`} style={{ color: colors.text }}>
+                    Descripción
+                  </div>
+                  <div className={`${getTypeSize('body', screenSize)}`} style={{ color: colors.textSecondary }}>
+                    {trick.description}
+                  </div>
+                </div>
+                
+                <div>
+                  <div className={`${getTypeSize('body', screenSize)} font-medium mb-1`} style={{ color: colors.text }}>
+                    Ejemplo
+                  </div>
+                  <div className={`${getTypeSize('body', screenSize)} p-2 rounded-lg`} style={{ 
+                    backgroundColor: colors.accent,
+                    color: colors.textSecondary,
+                    fontFamily: 'Georgia, serif'
+                  }}>
+                    {trick.example}
+                  </div>
+                </div>
+                
+                <div>
+                  <div className={`${getTypeSize('body', screenSize)} font-medium mb-1`} style={{ color: colors.text }}>
+                    Cuándo usar
+                  </div>
+                  <div className={`${getTypeSize('body', screenSize)}`} style={{ color: colors.textSecondary }}>
+                    {trick.useCase}
+                  </div>
+                </div>
+              </div>
+              
+              <button
+                onClick={() => startTrickPractice(trick.id)}
+                className={`w-full py-3 ${getTypeSize('button', screenSize)} font-medium rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}
+                style={{
+                  color: colors.text,
+                  fontFamily: 'Inter, -apple-system, sans-serif'
+                }}
+              >
+                Practicar truco
+              </button>
+            </div>
+          ))}
         </div>
       </div>
     </div>
   );
 
-  // Renderizado principal con sistema de usuarios
+  // Renderizado principal
   return (
-    <div style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
-      {showCreateProfile ? <CreateProfileScreen /> :
-       showUserSelection ? <UserSelectionScreen /> :
-       user ? (
+    <div style={{ backgroundColor: colors.background }} className="min-h-screen">
+      {showUserSelection && <UserSelectionScreen />}
+      {showCreateProfile && <CreateProfileScreen />}
+      {!showUserSelection && !showCreateProfile && (
         <>
           {gameMode === 'welcome' && <WelcomeScreen />}
           {gameMode === 'setup' && <SetupScreen />}
           {gameMode === 'playing' && <GameScreen />}
           {gameMode === 'sessionComplete' && <SessionCompleteScreen />}
+          {gameMode === 'tricks' && <TricksScreen />}
           {gameMode === 'tricksPlay' && <TricksPlayScreen />}
           {gameMode === 'stats' && <StatsScreen />}
-          {gameMode === 'tricks' && <TricksScreen />}
         </>
-       ) : null}
+      )}
     </div>
   );
 };
