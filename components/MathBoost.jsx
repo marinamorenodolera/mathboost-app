@@ -44,62 +44,64 @@ const MathBoost = () => {
     { level: 15, name: 'Dios Matemático', category: 'Maestro', weeklyProblemsMin: 1500, weeklyProblemsMax: 2000, speedTarget: 1.2, emoji: '🌟' }
   ];
 
+  // Sistema de notificaciones por usuario
+  const [notificationTimeouts, setNotificationTimeouts] = useState({});
+
   // Sistema de usuarios mejorado
   const [users, setUsers] = useState({
     marina: {
       name: 'marina',
       avatar: '👩‍💻',
-      currentLevel: 12,
-      sessionsThisWeek: 4,
-      sessionsLastWeek: 2,
-      averageResponseTime: 2.1,
-      lastWeekResponseTime: 3.4,
-      totalProblemsThisWeek: 1247,
-      totalProblemsLastWeek: 890,
-      totalProblemsLifetime: 28472,
-      totalHoursInvested: 147.5,
-      nextLevelProblems: 150,
-      currentStreak: 7,
-      bestStreak: 23,
-      consecutiveDays: 12,
-      bestTable: 7,
-      weakestTable: 8,
-      averageUserSpeed: 3.2,
-      globalRanking: 15,
-      commonMistakes: {
-        'tabla_8': { errors: 12, total: 45, percentage: 26.7 },
-        'carry_operations': { errors: 8, total: 67, percentage: 11.9 },
-        'speed_pressure': { errors: 15, total: 120, percentage: 12.5 }
-      },
-      strengths: ['Tablas del 2, 3, 7', 'Cálculos bajo presión', 'Patrones numéricos'],
-      weaknesses: ['Tabla del 8', 'Números grandes', 'Operaciones con llevada'],
-      projectionWeeks: 3,
-      projectionText: 'Ninja Matemático completo',
+      currentLevel: 1,
+      sessionsThisWeek: 0,
+      sessionsLastWeek: 0,
+      averageResponseTime: 0,
+      lastWeekResponseTime: 0,
+      totalProblemsThisWeek: 0,
+      totalProblemsLastWeek: 0,
+      totalProblemsLifetime: 0,
+      totalHoursInvested: 0,
+      nextLevelProblems: 50,
+      currentStreak: 0,
+      bestStreak: 0,
+      consecutiveDays: 0,
+      bestTable: null,
+      weakestTable: null,
+      averageUserSpeed: 0,
+      globalRanking: null,
+      commonMistakes: {},
+      strengths: [],
+      weaknesses: [],
+      projectionWeeks: 12,
+      projectionText: 'calculadora mental básica',
       nextAchievement: {
-        name: 'Velocista Mental',
-        description: 'Responde 10 problemas en menos de 2s',
-        progress: 7,
-        total: 10,
-        emoji: '🏃‍♀️'
+        name: 'Primer Paso',
+        description: 'Completa tu primera sesión de entrenamiento',
+        progress: 0,
+        total: 1,
+        emoji: '🌱'
       },
       practiceHeatmap: [
-        [0, 1, 2, 0, 1, 0, 1],
-        [2, 0, 1, 1, 0, 2, 1],
-        [1, 1, 0, 2, 1, 1, 0],
-        [2, 1, 2, 1, 2, 0, 1]
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0]
       ],
       activityPatterns: {
-        bestDays: ['Martes', 'Jueves', 'Domingo'],
-        bestHours: ['8:00-9:00', '14:00-15:00', '20:00-21:00'],
-        avgSessionLength: '12 min',
-        preferredDifficulty: 'Intermedio'
+        bestDays: [],
+        bestHours: [],
+        avgSessionLength: '0 min',
+        preferredDifficulty: 'Principiante'
       },
-      personalProfile: `Marina es una calculadora mental de élite con preferencia por sesiones cortas pero intensas. 
-      Destaca especialmente en las tablas primarias (2, 3, 7) y muestra gran resistencia bajo presión temporal. 
-      Su principal área de mejora se centra en la tabla del 8 y operaciones con números de múltiples dígitos. 
-      Practica de forma muy consistente, especialmente los martes y jueves por la mañana.`,
+      personalProfile: `Marina está comenzando su viaje en el cálculo mental. Como nueva usuaria, tiene un gran potencial de crecimiento y mejora. ¡Es el momento perfecto para establecer buenos hábitos de práctica y descubrir sus fortalezas naturales en matemáticas!`,
       lastNotification: null,
-      createdAt: Date.now() - 30 * 24 * 60 * 60 * 1000
+      createdAt: Date.now() - 30 * 24 * 60 * 60 * 1000,
+      notificationPreferences: {
+        enabled: true,
+        frequency: 'daily', // daily, weekly, never
+        bestTime: '18:00',
+        motivationStyle: 'encouraging' // encouraging, challenging, casual
+      }
     },
     pieter: {
       name: 'pieter',
@@ -147,7 +149,13 @@ const MathBoost = () => {
       },
       personalProfile: `Pieter está comenzando su viaje en el cálculo mental. Como nuevo usuario, tiene un gran potencial de crecimiento y mejora. ¡Es el momento perfecto para establecer buenos hábitos de práctica y descubrir sus fortalezas naturales en matemáticas!`,
       lastNotification: null,
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      notificationPreferences: {
+        enabled: true,
+        frequency: 'daily',
+        bestTime: '19:00',
+        motivationStyle: 'professional' // encouraging, challenging, casual, professional
+      }
     }
   });
 
@@ -292,22 +300,25 @@ const MathBoost = () => {
       logoSize: 'text-5xl',
       padding: 'p-4',
       headerPadding: 'p-4',
-      gridCols: 'grid-cols-1',
-      cardPadding: 'p-6'
+      gridCols: 'grid-cols-2',
+      cardPadding: 'p-4',
+      gap: 'gap-4'
     },
     tablet: {
       logoSize: 'text-6xl',
       padding: 'p-6',
       headerPadding: 'p-5',
       gridCols: 'grid-cols-2',
-      cardPadding: 'p-8'
+      cardPadding: 'p-6',
+      gap: 'gap-6'
     },
     desktop: {
       logoSize: 'text-7xl',
       padding: 'p-8',
       headerPadding: 'p-6',
-      gridCols: 'grid-cols-3',
-      cardPadding: 'p-10'
+      gridCols: 'grid-cols-2',
+      cardPadding: 'p-8',
+      gap: 'gap-8'
     }
   };
 
@@ -319,7 +330,7 @@ const MathBoost = () => {
   const getWeeklyProblemsGoal = (user) => getUserLevelData(user)?.weeklyProblemsMax || 0;
   const getWeeklySpeedGoal = (user) => getUserLevelData(user)?.speedTarget || 0;
 
-  // Gestión de usuarios
+  // Gestión de usuarios actualizada
   const createNewProfile = () => {
     if (!newProfileName.trim()) return;
     
@@ -370,7 +381,13 @@ const MathBoost = () => {
       },
       personalProfile: `${newProfileName} está comenzando su viaje en el cálculo mental. Como nuevo usuario, tiene un gran potencial de crecimiento y mejora. ¡Es el momento perfecto para establecer buenos hábitos de práctica y descubrir sus fortalezas naturales en matemáticas!`,
       lastNotification: null,
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      notificationPreferences: {
+        enabled: true,
+        frequency: 'daily',
+        bestTime: '18:00',
+        motivationStyle: 'encouraging'
+      }
     };
 
     setUsers(prev => ({ ...prev, [userId]: newUser }));
@@ -380,10 +397,10 @@ const MathBoost = () => {
     setNewProfileName('');
     setNewProfileEmoji('👤');
     
-    scheduleNotification(newUser);
+    scheduleUserNotifications(newUser);
   };
 
-  // Sistema de notificaciones
+  // Sistema de notificaciones por usuario mejorado
   const requestNotificationPermission = async () => {
     if ('Notification' in window) {
       const permission = await Notification.requestPermission();
@@ -392,47 +409,141 @@ const MathBoost = () => {
     return false;
   };
 
-  const getMotivationalMessage = (user) => {
-    const messages = [
-      `¡Hora de brillar, ${user.name}! 🌟 ¿Te atreves con la tabla del ${Math.floor(Math.random() * 8) + 2} hoy?`,
-      `${user.avatar} ¡5 minutos de matemáticas = un cerebro más fuerte! 💪 Recomendación: multiplicaciones rápidas`,
-      `¡Desafío diario activado! 🎯 ${user.name}, entrena tu tabla más débil y conviértela en fortaleza 🚀`,
-      `🔥 ¡Tu racha de ${user.currentStreak} días te está esperando! No la rompas ahora, campeón/a`,
-      `¡Momento mathboost! ⚡ 5 minutos de práctica = progreso hacia el siguiente nivel. ¡Vamos ${user.name}!`,
-      `${user.avatar} El secreto está en la constancia. ¡Tu yo del futuro te agradecerá estos 5 minutos! 🎓`,
-      `¡Alerta de genio! 🧠 ${user.name}, es hora de demostrar de qué estás hecho/a. Sugerencia: tabla del ${user.weakestTable || Math.floor(Math.random() * 8) + 2}`,
-      `🌅 Un nuevo día, una nueva oportunidad de ser más rápido/a. ¡Acelera tu mente con mathboost!`,
-      `¡Desbloquea tu potencial! 🔓 ${user.name}, cada problema resuelto te acerca a la maestría matemática`,
-      `${user.avatar} ¿Listo/a para 5 minutos de diversión matemática? ¡Tu cerebro te lo pedirá! 🎮`
-    ];
-    
-    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-    return randomMessage;
-  };
-
-  const scheduleNotification = (user) => {
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
-      const message = getMotivationalMessage(user);
-      
-      setTimeout(() => {
-        if (Notification.permission === 'granted') {
-          new Notification('MathBoost - ¡Hora de entrenar! 🧮', {
-            body: message,
-            icon: '/icon-192.png',
-            badge: '/badge-72.png',
-            tag: 'daily-reminder',
-            renotify: true,
-            vibrate: [200, 100, 200]
-          });
-        }
-      }, 5000);
+  const cancelUserNotifications = (userId) => {
+    if (notificationTimeouts[userId]) {
+      clearTimeout(notificationTimeouts[userId]);
+      setNotificationTimeouts(prev => {
+        const updated = { ...prev };
+        delete updated[userId];
+        return updated;
+      });
     }
   };
 
-  // Inicializar notificaciones
+  const getMotivationalMessage = (user) => {
+    const { motivationStyle } = user.notificationPreferences;
+    
+    const messages = {
+      encouraging: [
+        `¡Hora de brillar, ${user.name}! 🌟 Tu cerebro está listo para el siguiente desafío`,
+        `${user.avatar} ¡Cada problema resuelto te hace más fuerte! 💪 ¿Practicamos 5 minutos?`,
+        `¡Momento perfecto para entrenar! ✨ ${user.name}, tu mente matemática te está esperando`,
+        `🌱 Pequeños pasos, grandes resultados. ¡Vamos ${user.name}, tu futuro te lo agradecerá!`,
+        `${user.avatar} El secreto del éxito está en la constancia. ¡Practiquemos juntos! 🎯`
+      ],
+      challenging: [
+        `🔥 Desafío activado, ${user.name}! ¿Puedes superar tu récord de velocidad?`,
+        `${user.avatar} Los genios no nacen, se hacen entrenando. ¡Demuestra tu potencial! ⚡`,
+        `🎯 Tu mente es tu arma más poderosa. ¡Tiempo de afilarla, ${user.name}!`,
+        `¡Alerta de competencia! 🏆 ${user.name}, ¿estás listo para dominar las matemáticas?`,
+        `${user.avatar} La zona de confort es el enemigo del progreso. ¡Sal y entrena! 🚀`
+      ],
+      casual: [
+        `¡Hey ${user.name}! 😊 ¿Te apetece un ratito de mates?`,
+        `${user.avatar} Cinco minutitos de entrenamiento y luego a lo tuyo. ¡Vamos!`,
+        `🎮 Mathboost time! ${user.name}, ¿jugamos un rato?`,
+        `¡Hola! 👋 Tu cerebro dice que extraña los números. ¿Le hacemos caso?`,
+        `${user.avatar} Pausa perfecta para un poco de diversión matemática, ${user.name} 😄`
+      ],
+      professional: [
+        `${user.name}, optimiza tu rendimiento cognitivo con 5 minutos de entrenamiento. 📊`,
+        `${user.avatar} Sesión de desarrollo de habilidades cuantitativas programada. ¡Iniciemos!`,
+        `🎯 Inversión en capital intelectual: ${user.name}, mejora tu agilidad mental hoy`,
+        `Recordatorio profesional: Tu progreso matemático requiere práctica sistemática. 📈`,
+        `${user.avatar} ${user.name}, excellence requires consistency. Training time! 💼`
+      ]
+    };
+    
+    const styleMessages = messages[motivationStyle] || messages.encouraging;
+    return styleMessages[Math.floor(Math.random() * styleMessages.length)];
+  };
+
+  const scheduleUserNotifications = (user) => {
+    if (!user.notificationPreferences.enabled || user.notificationPreferences.frequency === 'never') {
+      return;
+    }
+
+    // Cancelar notificaciones anteriores de este usuario
+    cancelUserNotifications(user.name);
+
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      const message = getMotivationalMessage(user);
+      
+      // Calcular el tiempo hasta la próxima notificación
+      const now = new Date();
+      const [hours, minutes] = user.notificationPreferences.bestTime.split(':');
+      const nextNotification = new Date();
+      nextNotification.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      
+      // Si ya pasó la hora de hoy, programar para mañana
+      if (nextNotification <= now) {
+        nextNotification.setDate(nextNotification.getDate() + 1);
+      }
+      
+      const timeUntilNotification = nextNotification.getTime() - now.getTime();
+      
+      const timeoutId = setTimeout(() => {
+        if (Notification.permission === 'granted') {
+          new Notification(`MathBoost - ¡${user.name}! 🧮`, {
+            body: message,
+            icon: '/icon-192.png',
+            badge: '/badge-72.png',
+            tag: `mathboost-${user.name}`,
+            renotify: true,
+            vibrate: [200, 100, 200]
+          });
+          
+          // Programar la siguiente notificación según la frecuencia
+          if (user.notificationPreferences.frequency === 'daily') {
+            scheduleUserNotifications(user);
+          }
+        }
+      }, Math.min(timeUntilNotification, 24 * 60 * 60 * 1000)); // Máximo 24 horas
+      
+      setNotificationTimeouts(prev => ({
+        ...prev,
+        [user.name]: timeoutId
+      }));
+    }
+  };
+
+  const switchUser = (userId) => {
+    // Cancelar notificaciones del usuario anterior
+    if (currentUser) {
+      cancelUserNotifications(currentUser);
+    }
+    
+    setCurrentUser(userId);
+    setShowUserSelection(false);
+    
+    // Programar notificaciones para el nuevo usuario
+    const newUser = users[userId];
+    if (newUser) {
+      scheduleUserNotifications(newUser);
+    }
+  };
+
+  // Inicializar notificaciones y usuario por defecto
   useEffect(() => {
     requestNotificationPermission();
+    
+    // Si no hay usuario seleccionado pero hay usuarios disponibles, no seleccionar automáticamente
+    // Dejar que el usuario elija
   }, []);
+
+  // Programar notificaciones cuando se selecciona un usuario
+  useEffect(() => {
+    if (currentUser && users[currentUser]) {
+      scheduleUserNotifications(users[currentUser]);
+    }
+    
+    return () => {
+      // Limpiar notificaciones al cambiar de usuario o desmontar
+      if (currentUser) {
+        cancelUserNotifications(currentUser);
+      }
+    };
+  }, [currentUser]);
 
   // Emojis para selección
   const availableEmojis = [
@@ -694,15 +805,11 @@ const MathBoost = () => {
             Selecciona tu perfil o crea uno nuevo
           </p>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-2 gap-6 mb-8">
             {Object.values(users).map((userData) => (
               <button
                 key={userData.name}
-                onClick={() => {
-                  setCurrentUser(userData.name);
-                  setShowUserSelection(false);
-                  scheduleNotification(userData);
-                }}
+                onClick={() => switchUser(userData.name)}
                 className="group p-8 text-center rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
                 style={{
                   color: colors.text
@@ -729,7 +836,7 @@ const MathBoost = () => {
               setShowCreateProfile(true);
               setShowUserSelection(false);
             }}
-            className="group px-8 py-6 text-lg font-medium rounded-3xl transition-all duration-300 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
+            className="group px-8 py-6 text-lg font-medium rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
             style={{
               color: colors.text,
               fontFamily: 'Inter, -apple-system, sans-serif'
@@ -879,20 +986,41 @@ const MathBoost = () => {
               <ArrowLeft size={18} color={colors.text} />
             </button>
           )}
+          
+          {/* Timer durante entrenamiento - mejor posicionado */}
           {(gameMode === 'playing' || gameMode === 'tricksPlay') && !sessionEnded && (
-            <div className="flex items-center gap-6 text-sm" style={{ color: colors.textSecondary }}>
+            <div 
+              className="flex items-center gap-4 px-4 py-2 rounded-2xl"
+              style={{
+                ...liquidGlass,
+                color: colors.text,
+                fontFamily: 'Inter, -apple-system, sans-serif'
+              }}
+            >
               <div className="flex items-center gap-2">
-                <Clock size={14} />
-                <span style={{ fontFamily: 'Georgia, serif' }}>{formatSessionTime(stats.sessionDuration)}</span>
-                <span style={{ color: colors.textTertiary }}>/ 5:00</span>
+                <Clock size={16} color={colors.primary} />
+                <span className="text-lg font-medium" style={{ fontFamily: 'Georgia, serif' }}>
+                  {formatSessionTime(stats.sessionDuration)}
+                </span>
+                <span className="text-sm" style={{ color: colors.textTertiary }}>/ 5:00</span>
               </div>
+              <div className="w-px h-4 bg-gray-300"></div>
               <div className="flex items-center gap-2">
-                🎯 <span style={{ fontFamily: 'Georgia, serif' }}>{stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0}%</span>
+                <Target size={16} color={colors.secondary} />
+                <span className="text-lg font-medium" style={{ fontFamily: 'Georgia, serif' }}>
+                  {stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0}%
+                </span>
               </div>
               {stats.streak > 0 && (
-                <div className="flex items-center gap-2 animate-pulse">
-                  🔥 <span style={{ fontFamily: 'Georgia, serif' }}>{stats.streak}</span>
-                </div>
+                <>
+                  <div className="w-px h-4 bg-gray-300"></div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-lg">🔥</div>
+                    <span className="text-lg font-medium" style={{ fontFamily: 'Georgia, serif' }}>
+                      {stats.streak}
+                    </span>
+                  </div>
+                </>
               )}
             </div>
           )}
@@ -915,39 +1043,46 @@ const MathBoost = () => {
             </button>
           )}
           
-          {gameMode !== 'stats' && (
-            <button
-              onClick={() => setGameMode('stats')}
-              className="group p-3 rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95"
-              style={liquidGlass}
-              onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-              onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
-            >
-              <BarChart3 size={18} color={colors.textSecondary} />
-            </button>
+          {/* Solo mostrar navegación cuando NO está en entrenamiento */}
+          {gameMode !== 'playing' && gameMode !== 'tricksPlay' && (
+            <>
+              {gameMode !== 'stats' && (
+                <button
+                  onClick={() => setGameMode('stats')}
+                  className="group p-3 rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95"
+                  style={liquidGlass}
+                  onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
+                  onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
+                >
+                  <BarChart3 size={18} color={colors.textSecondary} />
+                </button>
+              )}
+              {gameMode !== 'tricks' && (
+                <button
+                  onClick={() => setGameMode('tricks')}
+                  className="group p-3 rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95"
+                  style={liquidGlass}
+                  onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
+                  onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
+                >
+                  <Lightbulb size={18} color={colors.textSecondary} />
+                </button>
+              )}
+              {gameMode !== 'welcome' && (
+                <button
+                  onClick={() => setGameMode('welcome')}
+                  className="group p-3 rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95"
+                  style={liquidGlass}
+                  onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
+                  onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
+                >
+                  <User size={18} color={colors.textSecondary} />
+                </button>
+              )}
+            </>
           )}
-          {gameMode !== 'tricks' && (
-            <button
-              onClick={() => setGameMode('tricks')}
-              className="group p-3 rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95"
-              style={liquidGlass}
-              onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-              onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
-            >
-              <Lightbulb size={18} color={colors.textSecondary} />
-            </button>
-          )}
-          {gameMode !== 'welcome' && (
-            <button
-              onClick={() => setGameMode('welcome')}
-              className="group p-3 rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95"
-              style={liquidGlass}
-              onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-              onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
-            >
-              <User size={18} color={colors.textSecondary} />
-            </button>
-          )}
+          
+          {/* Botón de salir solo durante entrenamiento */}
           {(gameMode === 'playing' || gameMode === 'tricksPlay') && (
             <button
               onClick={() => setGameMode('welcome')}
@@ -955,6 +1090,7 @@ const MathBoost = () => {
               style={liquidGlass}
               onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
               onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
+              title="Salir del entrenamiento"
             >
               <X size={18} color={colors.textSecondary} />
             </button>
@@ -963,6 +1099,70 @@ const MathBoost = () => {
       </div>
     </div>
   );
+
+  // Teclado numérico para mobile
+  const MobileKeyboard = () => {
+    if (screenSize !== 'mobile' || (gameMode !== 'playing' && gameMode !== 'tricksPlay') || showFeedback || sessionEnded) {
+      return null;
+    }
+
+    const handleNumberClick = (num) => {
+      const newAnswer = userAnswer + num;
+      setUserAnswer(newAnswer);
+      
+      if (currentProblem && shouldAutoConfirm(newAnswer, currentProblem.correctAnswer)) {
+        setTimeout(() => checkAnswer(newAnswer), 300);
+      }
+    };
+
+    const handleBackspace = () => {
+      setUserAnswer(prev => prev.slice(0, -1));
+    };
+
+    const handleClear = () => {
+      setUserAnswer('');
+    };
+
+    return (
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-black/5 p-4">
+        <div className="grid grid-cols-3 gap-3 max-w-sm mx-auto mb-4">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+            <button
+              key={num}
+              onClick={() => handleNumberClick(num.toString())}
+              className="h-12 text-xl font-medium rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
+              style={{ color: colors.text }}
+            >
+              {num}
+            </button>
+          ))}
+        </div>
+        <div className="grid grid-cols-3 gap-3 max-w-sm mx-auto">
+          <button
+            onClick={handleClear}
+            className="h-12 text-lg font-medium rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
+            style={{ color: colors.textSecondary }}
+          >
+            C
+          </button>
+          <button
+            onClick={() => handleNumberClick('0')}
+            className="h-12 text-xl font-medium rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
+            style={{ color: colors.text }}
+          >
+            0
+          </button>
+          <button
+            onClick={handleBackspace}
+            className="h-12 text-lg font-medium rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
+            style={{ color: colors.textSecondary }}
+          >
+            ⌫
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   // Pantalla de bienvenida mejorada
   const WelcomeScreen = () => {
@@ -980,7 +1180,7 @@ const MathBoost = () => {
             >
               mathboost
             </h1>
-            <div className="mb-6 text-6xl animate-bounce">{user.avatar}</div>
+            <div className="mb-6 text-6xl animate-bounce hover:scale-110 transition-transform duration-300">{user.avatar}</div>
             <p 
               className="text-xl font-light mb-8" 
               style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
@@ -990,49 +1190,36 @@ const MathBoost = () => {
             
             <button
               onClick={() => setGameMode('setup')}
-              className="group px-12 py-6 text-2xl font-medium rounded-3xl transition-all duration-300 hover:scale-105 active:scale-95 mb-4 shadow-2xl"
+              className="group px-12 py-6 text-2xl font-medium rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 mb-4 shadow-2xl bg-white/85 backdrop-blur-xl border border-black/5 hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
               style={{
-                ...liquidGlass,
                 background: `linear-gradient(135deg, ${colors.primaryLight}, ${colors.secondaryLight})`,
                 color: colors.text,
                 fontFamily: 'Inter, -apple-system, sans-serif',
                 border: `2px solid ${colors.primary}20`
               }}
-              onMouseEnter={(e) => Object.assign(e.target.style, {
-                ...liquidGlassHover,
-                background: `linear-gradient(135deg, ${colors.primary}20, ${colors.secondary}20)`
-              })}
-              onMouseLeave={(e) => Object.assign(e.target.style, {
-                ...liquidGlass,
-                background: `linear-gradient(135deg, ${colors.primaryLight}, ${colors.secondaryLight})`
-              })}
             >
-              🚀 comenzar entrenamiento
+              <span className="group-hover:scale-110 transition-transform duration-300 inline-block">🚀</span> comenzar entrenamiento
             </button>
             
             <div className="flex justify-center">
               <button
                 onClick={() => setShowUserSelection(true)}
-                className="group px-6 py-3 text-base font-medium rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95"
+                className="group px-6 py-3 text-base font-medium rounded-2xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
                 style={{
-                  ...liquidGlass,
                   color: colors.textSecondary,
-                  fontFamily: 'Inter, -apple-system, sans-serif',
-                  border: `1px solid ${colors.border}`
+                  fontFamily: 'Inter, -apple-system, sans-serif'
                 }}
-                onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-                onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
               >
                 👥 Cambiar usuario
               </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-            <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105`} style={liquidGlass}>
+          <div className={`grid ${r.gridCols} ${r.gap} mb-12`}>
+            <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="text-3xl">📊</div>
+                  <div className="text-3xl group-hover:scale-110 transition-transform duration-300">📊</div>
                   <h3 className="text-lg font-medium" style={{ color: colors.text }}>
                     Problemas semanales
                   </h3>
@@ -1062,10 +1249,10 @@ const MathBoost = () => {
               </p>
             </div>
 
-            <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105`} style={liquidGlass}>
+            <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="text-3xl">⚡</div>
+                  <div className="text-3xl group-hover:scale-110 transition-transform duration-300">⚡</div>
                   <h3 className="text-lg font-medium" style={{ color: colors.text }}>
                     Velocidad objetivo
                   </h3>
@@ -1102,11 +1289,11 @@ const MathBoost = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+          <div className={`grid ${r.gridCols} ${r.gap} mb-12`}>
             
-            <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105`} style={liquidGlass}>
+            <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
               <div className="text-center">
-                <div className="text-4xl mb-4">🔥</div>
+                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">🔥</div>
                 <h4 className="text-lg font-medium mb-2" style={{ color: colors.text }}>
                   Rachas
                 </h4>
@@ -1122,9 +1309,9 @@ const MathBoost = () => {
               </div>
             </div>
 
-            <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105`} style={liquidGlass}>
+            <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
               <div className="text-center">
-                <div className="text-4xl mb-4">💎</div>
+                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">💎</div>
                 <h4 className="text-lg font-medium mb-2" style={{ color: colors.text }}>
                   Tu velocidad
                 </h4>
@@ -1140,9 +1327,9 @@ const MathBoost = () => {
               </div>
             </div>
 
-            <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105`} style={liquidGlass}>
+            <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
               <div className="text-center">
-                <div className="text-4xl mb-4">{user.nextAchievement.emoji}</div>
+                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">{user.nextAchievement.emoji}</div>
                 <h4 className="text-lg font-medium mb-2" style={{ color: colors.text }}>
                   Próximo logro
                 </h4>
@@ -1161,9 +1348,9 @@ const MathBoost = () => {
               </div>
             </div>
 
-            <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105`} style={liquidGlass}>
+            <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
               <div className="text-center">
-                <div className="text-4xl mb-4">🎯</div>
+                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">🎯</div>
                 <h4 className="text-lg font-medium mb-2" style={{ color: colors.text }}>
                   Total lifetime
                 </h4>
@@ -1179,9 +1366,9 @@ const MathBoost = () => {
               </div>
             </div>
 
-            <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105`} style={liquidGlass}>
+            <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
               <div className="text-center">
-                <div className="text-4xl mb-4">📈</div>
+                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">📈</div>
                 <h4 className="text-lg font-medium mb-4" style={{ color: colors.text }}>
                   Análisis de tablas
                 </h4>
@@ -1205,9 +1392,9 @@ const MathBoost = () => {
               </div>
             </div>
 
-            <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105`} style={liquidGlass}>
+            <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
               <div className="text-center">
-                <div className="text-4xl mb-4">🔮</div>
+                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">🔮</div>
                 <h4 className="text-lg font-medium mb-2" style={{ color: colors.text }}>
                   Proyección
                 </h4>
@@ -1224,7 +1411,7 @@ const MathBoost = () => {
             </div>
           </div>
 
-          <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-102 mb-8`} style={liquidGlass}>
+          <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-102 mb-8 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
             <h3 className="text-lg font-medium mb-8 text-center" style={{ color: colors.text }}>
               Patrones de actividad
             </h3>
@@ -1369,14 +1556,11 @@ const MathBoost = () => {
                   <button
                     key={op.key}
                     onClick={() => {setOperation(op.key); setSetupStep(2);}}
-                    className="group p-12 text-center rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95"
+                    className="group p-12 text-center rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
                     style={{
-                      ...liquidGlass,
                       backgroundColor: operation === op.key ? colors.accentActive : colors.surface,
                       color: colors.text
                     }}
-                    onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-                    onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
                   >
                     <div 
                       className="text-6xl font-light mb-6 group-hover:scale-110 transition-transform duration-300" 
@@ -1407,14 +1591,11 @@ const MathBoost = () => {
                 </p>
                 <button
                   onClick={() => setSetupStep(1)}
-                  className="group flex items-center gap-2 px-4 py-2 rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95 text-base"
+                  className="group flex items-center gap-2 px-4 py-2 rounded-2xl transition-all duration-500 hover:scale-105 active:scale-95 text-base bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
                   style={{
-                    ...liquidGlass,
                     color: colors.text,
                     fontFamily: 'Inter, -apple-system, sans-serif'
                   }}
-                  onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-                  onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
                 >
                   <RotateCcw size={16} />
                   cambiar operación
@@ -1431,14 +1612,11 @@ const MathBoost = () => {
                           : [...prev, table]
                       );
                     }}
-                    className="group p-10 text-center rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95"
+                    className="group p-10 text-center rounded-2xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
                     style={{
-                      ...liquidGlass,
                       backgroundColor: selectedTables.includes(table) ? colors.accentActive : colors.surface,
                       color: colors.text
                     }}
-                    onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-                    onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
                   >
                     <div 
                       className="text-3xl font-medium group-hover:scale-110 transition-transform duration-300" 
@@ -1453,14 +1631,11 @@ const MathBoost = () => {
                 <button
                   onClick={startGame}
                   disabled={selectedTables.length === 0}
-                  className="group px-12 py-4 text-lg font-medium rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50"
+                  className="group px-12 py-4 text-lg font-medium rounded-2xl transition-all duration-500 hover:scale-105 active:scale-95 disabled:opacity-50 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
                   style={{
-                    ...liquidGlass,
                     color: colors.text,
                     fontFamily: 'Inter, -apple-system, sans-serif'
                   }}
-                  onMouseEnter={(e) => !e.target.disabled && Object.assign(e.target.style, liquidGlassHover)}
-                  onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
                 >
                   comenzar entrenamiento
                 </button>
@@ -1479,14 +1654,11 @@ const MathBoost = () => {
                 </p>
                 <button
                   onClick={() => setSetupStep(1)}
-                  className="group flex items-center gap-2 px-4 py-2 rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95 text-base"
+                  className="group flex items-center gap-2 px-4 py-2 rounded-2xl transition-all duration-500 hover:scale-105 active:scale-95 text-base bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
                   style={{
-                    ...liquidGlass,
                     color: colors.text,
                     fontFamily: 'Inter, -apple-system, sans-serif'
                   }}
-                  onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-                  onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
                 >
                   <RotateCcw size={16} />
                   cambiar operación
@@ -1501,14 +1673,11 @@ const MathBoost = () => {
                   <button
                     key={range.key}
                     onClick={() => {setNumberRange(range.key); startGame();}}
-                    className="group p-12 text-center rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95"
+                    className="group p-12 text-center rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
                     style={{
-                      ...liquidGlass,
                       backgroundColor: colors.surface,
                       color: colors.text
                     }}
-                    onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-                    onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
                   >
                     <div 
                       className="text-3xl font-medium group-hover:scale-110 transition-transform duration-300" 
@@ -1530,7 +1699,7 @@ const MathBoost = () => {
   const GameScreen = () => (
     <div style={{ backgroundColor: colors.background }} className="min-h-screen pt-24">
       <NavigationHeader />
-      <div className={`flex items-center justify-center min-h-screen ${r.padding}`}>
+      <div className={`flex items-center justify-center min-h-screen ${r.padding} ${screenSize === 'mobile' ? 'pb-32' : ''}`}>
         <div className="max-w-3xl w-full text-center">
           {currentProblem && !sessionEnded && (
             <>
@@ -1609,12 +1778,13 @@ const MathBoost = () => {
                 className="text-lg font-light" 
                 style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
               >
-                escribe tu respuesta
+                {screenSize === 'mobile' ? 'usa el teclado abajo' : 'escribe tu respuesta'}
               </div>
             </>
           )}
         </div>
       </div>
+      <MobileKeyboard />
     </div>
   );
 
@@ -1632,7 +1802,7 @@ const MathBoost = () => {
             ¡Sesión completada!
           </h1>
           
-          <div className={`${r.cardPadding} rounded-3xl mb-8`} style={liquidGlass}>
+          <div className={`${r.cardPadding} rounded-3xl mb-8 transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <div className="text-center">
                 <div className="text-3xl font-light mb-2" style={{ color: colors.text, fontFamily: 'Georgia, serif' }}>
@@ -1664,27 +1834,21 @@ const MathBoost = () => {
           <div className="flex gap-4 justify-center">
             <button
               onClick={() => setGameMode('setup')}
-              className="px-8 py-3 text-lg font-medium rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95"
+              className="px-8 py-3 text-lg font-medium rounded-2xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
               style={{
-                ...liquidGlass,
                 color: colors.text,
                 fontFamily: 'Inter, -apple-system, sans-serif'
               }}
-              onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-              onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
             >
               Otra sesión
             </button>
             <button
               onClick={() => setGameMode('welcome')}
-              className="px-8 py-3 text-lg font-medium rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95"
+              className="px-8 py-3 text-lg font-medium rounded-2xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
               style={{
-                ...liquidGlass,
                 color: colors.text,
                 fontFamily: 'Inter, -apple-system, sans-serif'
               }}
-              onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-              onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
             >
               Ir al inicio
             </button>
@@ -1701,7 +1865,7 @@ const MathBoost = () => {
     return (
       <div style={{ backgroundColor: colors.background }} className="min-h-screen pt-24">
         <NavigationHeader showBack={true} onBack={() => setGameMode('tricks')} />
-        <div className={`flex items-center justify-center min-h-screen ${r.padding}`}>
+        <div className={`flex items-center justify-center min-h-screen ${r.padding} ${screenSize === 'mobile' ? 'pb-32' : ''}`}>
           <div className="max-w-3xl w-full text-center">
             <div className="mb-16">
               <div className="text-6xl mb-4">{trick?.emoji}</div>
@@ -1783,6 +1947,7 @@ const MathBoost = () => {
             )}
           </div>
         </div>
+        <MobileKeyboard />
       </div>
     );
   };
@@ -1811,7 +1976,7 @@ const MathBoost = () => {
               </p>
             </div>
 
-            <div className={`${r.cardPadding} rounded-3xl mb-12`} style={liquidGlass}>
+            <div className={`${r.cardPadding} rounded-3xl mb-12 transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
               <div className="flex items-center gap-4 mb-6">
                 <div className="text-3xl">{user.avatar}</div>
                 <div>
@@ -1833,7 +1998,7 @@ const MathBoost = () => {
               </div>
             </div>
 
-            <div className={`${r.cardPadding} rounded-3xl mb-12`} style={liquidGlass}>
+            <div className={`${r.cardPadding} rounded-3xl mb-12 transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
               <h3 className="text-lg font-medium mb-8 text-center" style={{ color: colors.text }}>
                 Sistema de progresión
               </h3>
@@ -1909,7 +2074,7 @@ const MathBoost = () => {
                   <div className="text-center mt-6">
                     <button
                       onClick={() => setShowFullLevelSystem(true)}
-                      className="text-sm px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105"
+                      className="text-sm px-4 py-2 rounded-lg transition-all duration-500 hover:scale-105"
                       style={{
                         color: colors.primary,
                         backgroundColor: colors.primaryLight,
@@ -1926,9 +2091,9 @@ const MathBoost = () => {
                     {levelSystem.map((level, index) => (
                       <div 
                         key={level.level}
-                        className={`p-3 rounded-xl text-center transition-all duration-300 ${
+                        className={`p-3 rounded-xl text-center transition-all duration-500 ${
                           level.level === user.currentLevel ? 'scale-105' : 'hover:scale-102'
-                        }`}
+                        } bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}
                         style={{
                           backgroundColor: level.level === user.currentLevel 
                             ? colors.accentActive 
@@ -1960,7 +2125,7 @@ const MathBoost = () => {
                   <div className="text-center">
                     <button
                       onClick={() => setShowFullLevelSystem(false)}
-                      className="text-sm px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105"
+                      className="text-sm px-4 py-2 rounded-lg transition-all duration-500 hover:scale-105"
                       style={{
                         color: colors.textSecondary,
                         backgroundColor: colors.surface,
@@ -1974,8 +2139,8 @@ const MathBoost = () => {
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-              <div className={`${r.cardPadding} rounded-3xl`} style={liquidGlass}>
+            <div className={`grid ${r.gridCols} ${r.gap} mb-12`}>
+              <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
                 <h3 className="text-lg font-medium mb-6 flex items-center gap-3" style={{ color: colors.text }}>
                   <div className="text-2xl">💪</div>
                   Fortalezas
@@ -1995,7 +2160,7 @@ const MathBoost = () => {
                 </div>
               </div>
 
-              <div className={`${r.cardPadding} rounded-3xl`} style={liquidGlass}>
+              <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
                 <h3 className="text-lg font-medium mb-6 flex items-center gap-3" style={{ color: colors.text }}>
                   <div className="text-2xl">🎯</div>
                   Áreas de mejora
@@ -2016,7 +2181,7 @@ const MathBoost = () => {
               </div>
             </div>
 
-            <div className={`${r.cardPadding} rounded-3xl mb-12`} style={liquidGlass}>
+            <div className={`${r.cardPadding} rounded-3xl mb-12 transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
               <h3 className="text-xl font-medium mb-6" style={{ color: colors.text }}>
                 Análisis de errores comunes
               </h3>
@@ -2046,7 +2211,7 @@ const MathBoost = () => {
               )}
             </div>
 
-            <div className={`${r.cardPadding} rounded-3xl mb-8`} style={liquidGlass}>
+            <div className={`${r.cardPadding} rounded-3xl mb-8 transition-all duration-500 hover:scale-102 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
               <h3 className="text-lg font-medium mb-8 text-center" style={{ color: colors.text }}>
                 Evolución semanal
               </h3>
@@ -2208,14 +2373,11 @@ const MathBoost = () => {
             <div className="text-center">
               <button
                 onClick={() => setGameMode('setup')}
-                className="group px-12 py-4 text-lg font-medium rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95"
+                className="group px-12 py-4 text-lg font-medium rounded-2xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
                 style={{
-                  ...liquidGlass,
                   color: colors.text,
                   fontFamily: 'Inter, -apple-system, sans-serif'
                 }}
-                onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-                onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
               >
                 continuar entrenando
               </button>
@@ -2247,14 +2409,11 @@ const MathBoost = () => {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className={`grid ${r.gridCols} ${r.gap}`}>
             {mathTricks.map((trick, index) => (
               <div 
                 key={trick.id} 
-                className={`group ${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95`} 
-                style={liquidGlass}
-                onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-                onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
+                className={`group ${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}
               >
                 <div className="flex items-start justify-between mb-6">
                   <div 
@@ -2307,8 +2466,8 @@ const MathBoost = () => {
                 <div 
                   className="text-sm mb-8 p-4 rounded-2xl" 
                   style={{ 
-                    backgroundColor: colors.surface, 
-                    color: colors.textSecondary,
+                    color: colors.textSecondary, 
+                    backgroundColor: colors.surface,
                     fontFamily: 'Georgia, serif',
                     border: `1px solid ${colors.border}`
                   }}
@@ -2317,16 +2476,13 @@ const MathBoost = () => {
                 </div>
                 <button
                   onClick={() => startTrickPractice(trick.id)}
-                  className="w-full py-3 text-lg font-medium rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95"
+                  className="w-full py-3 text-lg font-medium rounded-2xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
                   style={{
-                    ...liquidGlass,
                     color: colors.text,
                     fontFamily: 'Inter, -apple-system, sans-serif'
                   }}
-                  onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-                  onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
                 >
-                  {trick.emoji} practicar método
+                  <span className="group-hover:scale-110 transition-transform duration-300 inline-block">{trick.emoji}</span> practicar método
                 </button>
               </div>
             ))}
@@ -2335,14 +2491,11 @@ const MathBoost = () => {
           <div className="text-center mt-20">
             <button
               onClick={() => setGameMode('setup')}
-              className="group px-12 py-4 text-lg font-medium rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95"
+              className="group px-12 py-4 text-lg font-medium rounded-2xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
               style={{
-                ...liquidGlass,
                 color: colors.text,
                 fontFamily: 'Inter, -apple-system, sans-serif'
               }}
-              onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-              onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
             >
               práctica libre
             </button>
