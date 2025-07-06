@@ -703,14 +703,10 @@ const MathBoost = () => {
                   setShowUserSelection(false);
                   scheduleNotification(userData);
                 }}
-                className="group p-8 text-center rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95"
+                className="group p-8 text-center rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
                 style={{
-                  ...liquidGlass,
-                  backgroundColor: colors.surface,
                   color: colors.text
                 }}
-                onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-                onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
               >
                 <div className="text-6xl mb-4 group-hover:scale-110 transition-transform duration-300">
                   {userData.avatar}
@@ -733,15 +729,11 @@ const MathBoost = () => {
               setShowCreateProfile(true);
               setShowUserSelection(false);
             }}
-            className="group px-8 py-6 text-lg font-medium rounded-3xl transition-all duration-300 hover:scale-105 active:scale-95"
+            className="group px-8 py-6 text-lg font-medium rounded-3xl transition-all duration-300 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
             style={{
-              ...liquidGlass,
-              backgroundColor: colors.surface,
               color: colors.text,
               fontFamily: 'Inter, -apple-system, sans-serif'
             }}
-            onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
-            onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
           >
             <div className="text-3xl mb-2">➕</div>
             <div>Crear nuevo perfil</div>
