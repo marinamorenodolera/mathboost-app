@@ -1,9 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Play, Settings, BarChart3, Lightbulb, User, X, ArrowLeft, Clock, RotateCcw, Trophy, Target, Zap, Calendar } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 const MathBoost = () => {
+  // Supabase auth state management
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
   // Estados principales
-  const [gameMode, setGameMode] = useState('welcome');
+  const [gameMode, setGameMode] = useState('leaderboard'); // Start with leaderboard
   const [setupStep, setSetupStep] = useState(1);
   const [operation, setOperation] = useState('multiplication');
   const [selectedTables, setSelectedTables] = useState([2, 3, 4, 5]);
@@ -24,6 +29,10 @@ const MathBoost = () => {
   const [showCreateProfile, setShowCreateProfile] = useState(false);
   const [newProfileName, setNewProfileName] = useState('');
   const [newProfileEmoji, setNewProfileEmoji] = useState('👤');
+  
+  // Leaderboard state
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(true);
   
   // Sistema de niveles completo
   const levelSystem = [
@@ -47,117 +56,8 @@ const MathBoost = () => {
   // Sistema de notificaciones por usuario
   const [notificationTimeouts, setNotificationTimeouts] = useState({});
 
-  // Sistema de usuarios mejorado
-  const [users, setUsers] = useState({
-    marina: {
-      name: 'marina',
-      avatar: '👩‍💻',
-      currentLevel: 1,
-      sessionsThisWeek: 0,
-      sessionsLastWeek: 0,
-      averageResponseTime: 0,
-      lastWeekResponseTime: 0,
-      totalProblemsThisWeek: 0,
-      totalProblemsLastWeek: 0,
-      totalProblemsLifetime: 0,
-      totalHoursInvested: 0,
-      nextLevelProblems: 50,
-      currentStreak: 0,
-      bestStreak: 0,
-      consecutiveDays: 0,
-      bestTable: null,
-      weakestTable: null,
-      averageUserSpeed: 0,
-      globalRanking: null,
-      commonMistakes: {},
-      strengths: [],
-      weaknesses: [],
-      projectionWeeks: 12,
-      projectionText: 'calculadora mental básica',
-      nextAchievement: {
-        name: 'Primer Paso',
-        description: 'Completa tu primera sesión de entrenamiento',
-        progress: 0,
-        total: 1,
-        emoji: '🌱'
-      },
-      practiceHeatmap: [
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0]
-      ],
-      activityPatterns: {
-        bestDays: [],
-        bestHours: [],
-        avgSessionLength: '0 min',
-        preferredDifficulty: 'Principiante'
-      },
-      personalProfile: `Marina está comenzando su viaje en el cálculo mental. Como nueva usuaria, tiene un gran potencial de crecimiento y mejora. ¡Es el momento perfecto para establecer buenos hábitos de práctica y descubrir sus fortalezas naturales en matemáticas!`,
-      lastNotification: null,
-      createdAt: Date.now() - 30 * 24 * 60 * 60 * 1000,
-      notificationPreferences: {
-        enabled: true,
-        frequency: 'daily', // daily, weekly, never
-        bestTime: '18:00',
-        motivationStyle: 'encouraging' // encouraging, challenging, casual
-      }
-    },
-    pieter: {
-      name: 'pieter',
-      avatar: '👨‍💼',
-      currentLevel: 1,
-      sessionsThisWeek: 0,
-      sessionsLastWeek: 0,
-      averageResponseTime: 0,
-      lastWeekResponseTime: 0,
-      totalProblemsThisWeek: 0,
-      totalProblemsLastWeek: 0,
-      totalProblemsLifetime: 0,
-      totalHoursInvested: 0,
-      nextLevelProblems: 50,
-      currentStreak: 0,
-      bestStreak: 0,
-      consecutiveDays: 0,
-      bestTable: null,
-      weakestTable: null,
-      averageUserSpeed: 0,
-      globalRanking: null,
-      commonMistakes: {},
-      strengths: [],
-      weaknesses: [],
-      projectionWeeks: 12,
-      projectionText: 'calculadora mental básica',
-      nextAchievement: {
-        name: 'Primer Paso',
-        description: 'Completa tu primera sesión de entrenamiento',
-        progress: 0,
-        total: 1,
-        emoji: '🌱'
-      },
-      practiceHeatmap: [
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0]
-      ],
-      activityPatterns: {
-        bestDays: [],
-        bestHours: [],
-        avgSessionLength: '0 min',
-        preferredDifficulty: 'Principiante'
-      },
-      personalProfile: `Pieter está comenzando su viaje en el cálculo mental. Como nuevo usuario, tiene un gran potencial de crecimiento y mejora. ¡Es el momento perfecto para establecer buenos hábitos de práctica y descubrir sus fortalezas naturales en matemáticas!`,
-      lastNotification: null,
-      createdAt: Date.now(),
-      notificationPreferences: {
-        enabled: true,
-        frequency: 'daily',
-        bestTime: '19:00',
-        motivationStyle: 'professional' // encouraging, challenging, casual, professional
-      }
-    }
-  });
+  // Sistema de usuarios mejorado - Now using Supabase
+  const [users, setUsers] = useState({});
 
   // Usuario actual calculado
   const user = currentUser ? users[currentUser] : null;
@@ -171,6 +71,416 @@ const MathBoost = () => {
     sessionDuration: 0,
     errors: []
   });
+
+  // Supabase authentication setup
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Load user profiles from Supabase
+  const loadUserProfiles = useCallback(async () => {
+    if (!session?.user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', session.user.id);
+
+      if (error) {
+        console.error('Error loading user profiles:', error);
+        return;
+      }
+
+      // Convert array to object with profile_id as key
+      const profilesObject = {};
+      data.forEach(profile => {
+        profilesObject[profile.profile_id] = {
+          ...profile,
+          name: profile.profile_name,
+          avatar: profile.avatar_emoji,
+          // Parse JSON fields
+          practiceHeatmap: profile.practice_heatmap || [
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0]
+          ],
+          activityPatterns: profile.activity_patterns || {
+            bestDays: [],
+            bestHours: [],
+            avgSessionLength: '0 min',
+            preferredDifficulty: 'Principiante'
+          },
+          commonMistakes: profile.common_mistakes || {},
+          strengths: profile.strengths || [],
+          weaknesses: profile.weaknesses || [],
+          notificationPreferences: profile.notification_preferences || {
+            enabled: true,
+            frequency: 'daily',
+            bestTime: '18:00',
+            motivationStyle: 'encouraging'
+          }
+        };
+      });
+
+      setUsers(profilesObject);
+    } catch (error) {
+      console.error('Error loading user profiles:', error);
+    }
+  }, [session]);
+
+  // Load profiles when session changes
+  useEffect(() => {
+    if (session?.user) {
+      loadUserProfiles().then(() => {
+        // After loading profiles, check if user has any profiles
+        // This will be handled in the next render cycle when users state updates
+      });
+    } else {
+      // Clear users when session is null
+      setUsers({});
+      setCurrentUser(null);
+      setShowUserSelection(false);
+      setShowCreateProfile(false);
+    }
+  }, [session, loadUserProfiles]);
+
+  // Handle navigation after profiles are loaded
+  useEffect(() => {
+    if (session?.user && !loading) {
+      const hasProfiles = Object.keys(users).length > 0;
+      
+      if (!hasProfiles && !showCreateProfile && !showUserSelection) {
+        // User has no profiles, show create profile screen
+        setShowCreateProfile(true);
+        setShowUserSelection(false);
+      } else if (hasProfiles && !showCreateProfile && !showUserSelection && !currentUser) {
+        // User has profiles but none selected, show user selection
+        setShowUserSelection(true);
+      }
+    }
+  }, [session, users, loading, showCreateProfile, showUserSelection, currentUser]);
+
+  // Load leaderboard data
+  const loadLeaderboard = useCallback(async () => {
+    try {
+      setLeaderboardLoading(true);
+      const { data, error } = await supabase
+        .rpc('get_leaderboard');
+
+      if (error) {
+        console.error('Error loading leaderboard:', error);
+        return;
+      }
+
+      setLeaderboard(data || []);
+    } catch (error) {
+      console.error('Error loading leaderboard:', error);
+    } finally {
+      setLeaderboardLoading(false);
+    }
+  }, []);
+
+  // Create demo data for testing
+  const createDemoData = async () => {
+    try {
+      // Check if demo data already exists
+      const { data: existingData } = await supabase
+        .from('user_profiles')
+        .select('profile_name')
+        .in('profile_name', ['marina', 'pieter']);
+
+      if (existingData && existingData.length >= 2) {
+        return; // Demo data already exists
+      }
+
+      // Create Marina's profile
+      const marinaProfile = {
+        user_id: 'demo-marina',
+        profile_id: 'marina',
+        profile_name: 'marina',
+        avatar_emoji: '👩‍💻',
+        current_level: 3,
+        sessions_this_week: 12,
+        sessions_last_week: 8,
+        average_response_time: 3.2,
+        last_week_response_time: 4.1,
+        total_problems_this_week: 450,
+        total_problems_last_week: 320,
+        total_problems_lifetime: 2840,
+        total_hours_invested: 28.5,
+        next_level_problems: 600,
+        current_streak: 7,
+        best_streak: 12,
+        consecutive_days: 15,
+        best_table: 7,
+        weakest_table: 9,
+        average_user_speed: 3.8,
+        global_ranking: 2,
+        common_mistakes: { '7×9': 3, '8×6': 2 },
+        strengths: ['Multiplicación rápida', 'Patrones numéricos'],
+        weaknesses: ['Tabla del 9'],
+        projection_weeks: 8,
+        projection_text: 'Matemático Líquido',
+        next_achievement: {
+          name: 'Velocidad Suprema',
+          description: 'Alcanza menos de 3s promedio',
+          progress: 2,
+          total: 3,
+          emoji: '⚡'
+        },
+        practice_heatmap: [
+          [2, 3, 1, 2, 3, 2, 1],
+          [1, 2, 3, 2, 1, 2, 3],
+          [3, 2, 1, 3, 2, 1, 2],
+          [2, 1, 2, 1, 3, 2, 1]
+        ],
+        activity_patterns: {
+          bestDays: ['Lunes', 'Miércoles', 'Viernes'],
+          bestHours: ['18:00', '20:00'],
+          avgSessionLength: '8 min',
+          preferredDifficulty: 'Intermedio'
+        },
+        personal_profile: 'Marina es una calculadora mental dedicada que ha desarrollado una excelente velocidad en multiplicaciones. Su consistencia diaria y enfoque en patrones numéricos la han llevado al nivel 3. Destaca especialmente en la tabla del 7, pero busca mejorar en la tabla del 9.',
+        last_notification: new Date().toISOString(),
+        notification_preferences: {
+          enabled: true,
+          frequency: 'daily',
+          bestTime: '18:00',
+          motivationStyle: 'encouraging'
+        },
+        created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      // Create Pieter's profile
+      const pieterProfile = {
+        user_id: 'demo-pieter',
+        profile_id: 'pieter',
+        profile_name: 'pieter',
+        avatar_emoji: '👨‍💼',
+        current_level: 5,
+        sessions_this_week: 18,
+        sessions_last_week: 15,
+        average_response_time: 2.8,
+        last_week_response_time: 3.1,
+        total_problems_this_week: 720,
+        total_problems_last_week: 680,
+        total_problems_lifetime: 5420,
+        total_hours_invested: 45.2,
+        next_level_problems: 800,
+        current_streak: 14,
+        best_streak: 21,
+        consecutive_days: 28,
+        best_table: 8,
+        weakest_table: 6,
+        average_user_speed: 3.2,
+        global_ranking: 1,
+        common_mistakes: { '6×7': 1, '9×8': 1 },
+        strengths: ['Velocidad extrema', 'Consistencia', 'Técnicas avanzadas'],
+        weaknesses: ['Ocasional distracción'],
+        projection_weeks: 6,
+        projection_text: 'Experto Intuitivo',
+        next_achievement: {
+          name: 'Maestro Cuántico',
+          description: 'Alcanza el nivel 6',
+          progress: 4,
+          total: 5,
+          emoji: '⚛️'
+        },
+        practice_heatmap: [
+          [3, 2, 3, 2, 3, 2, 3],
+          [2, 3, 2, 3, 2, 3, 2],
+          [3, 2, 3, 2, 3, 2, 3],
+          [2, 3, 2, 3, 2, 3, 2]
+        ],
+        activity_patterns: {
+          bestDays: ['Martes', 'Jueves', 'Sábado'],
+          bestHours: ['19:00', '21:00'],
+          avgSessionLength: '12 min',
+          preferredDifficulty: 'Avanzado'
+        },
+        personal_profile: 'Pieter es un maestro del cálculo mental que ha alcanzado el nivel 5. Su dedicación diaria y técnicas avanzadas lo han convertido en el líder de la clasificación. Su velocidad promedio de 2.8 segundos es excepcional, y su consistencia en la práctica es un ejemplo para todos.',
+        last_notification: new Date().toISOString(),
+        notification_preferences: {
+          enabled: true,
+          frequency: 'daily',
+          bestTime: '19:00',
+          motivationStyle: 'challenging'
+        },
+        created_at: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      // Insert demo profiles
+      const { error } = await supabase
+        .from('user_profiles')
+        .upsert([marinaProfile, pieterProfile]);
+
+      if (error) {
+        console.error('Error creating demo data:', error);
+      } else {
+        console.log('Demo data created successfully');
+        // Reload leaderboard to show new data
+        loadLeaderboard();
+      }
+    } catch (error) {
+      console.error('Error creating demo data:', error);
+    }
+  };
+
+  // Load leaderboard on mount and periodically
+  useEffect(() => {
+    loadLeaderboard();
+    
+    // Create demo data for testing
+    createDemoData();
+    
+    // Refresh leaderboard every 5 minutes
+    const interval = setInterval(loadLeaderboard, 5 * 60 * 1000);
+    
+    return () => clearInterval(interval);
+  }, [loadLeaderboard]);
+
+  // Save user profile to Supabase
+  const saveUserProfile = async (profileData) => {
+    if (!session?.user) {
+      console.error('saveUserProfile: No session user');
+      return false;
+    }
+
+    console.log('saveUserProfile: Starting to save profile', { 
+      userId: session.user.id, 
+      profileId: profileData.profile_id,
+      profileName: profileData.name 
+    });
+
+    try {
+      const profileDataToSave = {
+        user_id: session.user.id,
+        profile_id: profileData.profile_id,
+        profile_name: profileData.name,
+        avatar_emoji: profileData.avatar,
+        current_level: profileData.currentLevel,
+        sessions_this_week: profileData.sessionsThisWeek,
+        sessions_last_week: profileData.sessionsLastWeek,
+        average_response_time: profileData.averageResponseTime,
+        last_week_response_time: profileData.lastWeekResponseTime,
+        total_problems_this_week: profileData.totalProblemsThisWeek,
+        total_problems_last_week: profileData.totalProblemsLastWeek,
+        total_problems_lifetime: profileData.totalProblemsLifetime,
+        total_hours_invested: profileData.totalHoursInvested,
+        next_level_problems: profileData.nextLevelProblems,
+        current_streak: profileData.currentStreak,
+        best_streak: profileData.bestStreak,
+        consecutive_days: profileData.consecutiveDays,
+        best_table: profileData.bestTable,
+        weakest_table: profileData.weakestTable,
+        average_user_speed: profileData.averageUserSpeed,
+        global_ranking: profileData.globalRanking,
+        common_mistakes: profileData.commonMistakes,
+        strengths: profileData.strengths,
+        weaknesses: profileData.weaknesses,
+        projection_weeks: profileData.projectionWeeks,
+        projection_text: profileData.projectionText,
+        next_achievement: profileData.nextAchievement,
+        practice_heatmap: profileData.practiceHeatmap,
+        activity_patterns: profileData.activityPatterns,
+        personal_profile: profileData.personalProfile,
+        last_notification: profileData.lastNotification,
+        notification_preferences: profileData.notificationPreferences,
+        created_at: profileData.createdAt,
+        updated_at: new Date().toISOString()
+      };
+
+      console.log('saveUserProfile: Data to save', profileDataToSave);
+
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .upsert(profileDataToSave);
+
+      if (error) {
+        console.error('saveUserProfile: Supabase error', error);
+        return false;
+      }
+
+      console.log('saveUserProfile: Profile saved successfully', { data });
+
+      // Reload profiles after saving
+      await loadUserProfiles();
+      return true;
+    } catch (error) {
+      console.error('saveUserProfile: Exception error', error);
+      return false;
+    }
+  };
+
+  // Sign in with email/password
+  const signInWithEmail = async (email, password) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        console.error('Error signing in:', error);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      console.error('Error signing in:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  // Sign up with email/password
+  const signUpWithEmail = async (email, password) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) {
+        console.error('Error signing up:', error);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      console.error('Error signing up:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  // Sign out
+  const signOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error signing out:', error);
+      }
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   // Trucos matemáticos
   const mathTricks = [
@@ -400,6 +710,20 @@ const MathBoost = () => {
     onMouseUp: (e) => Object.assign(e.target.style, cardStyleHover)
   });
 
+  // Helper function for consistent button styling
+  const getButtonProps = () => ({
+    className: 'transition-all duration-300 hover:scale-102 active:scale-98',
+    style: {
+      ...liquidGlass,
+      color: colors.text,
+      fontFamily: 'Inter, -apple-system, sans-serif'
+    },
+    onMouseEnter: (e) => Object.assign(e.target.style, { ...liquidGlassHover, transform: 'scale(1.02)' }),
+    onMouseLeave: (e) => Object.assign(e.target.style, { ...liquidGlass, transform: 'scale(1)' }),
+    onMouseDown: (e) => Object.assign(e.target.style, { ...liquidGlass, transform: 'scale(0.98)' }),
+    onMouseUp: (e) => Object.assign(e.target.style, { ...liquidGlassHover, transform: 'scale(1.02)' })
+  });
+
   // Responsive
   const [screenSize, setScreenSize] = useState('desktop');
   
@@ -505,12 +829,18 @@ const MathBoost = () => {
   const getWeeklyProblemsGoal = (user) => getUserLevelData(user)?.weeklyProblemsMax || 0;
   const getWeeklySpeedGoal = (user) => getUserLevelData(user)?.speedTarget || 0;
 
-  // Gestión de usuarios actualizada
-  const createNewProfile = () => {
-    if (!newProfileName.trim()) return;
+  // Gestión de usuarios actualizada con Supabase
+  const createNewProfile = async () => {
+    if (!newProfileName.trim() || !session?.user) {
+      console.log('createNewProfile: Missing required data', { newProfileName, session: !!session });
+      return;
+    }
     
-    const userId = newProfileName.toLowerCase().trim();
+    const profileId = newProfileName.toLowerCase().trim();
+    console.log('createNewProfile: Creating profile', { profileId, name: newProfileName });
+    
     const newUser = {
+      profile_id: profileId,
       name: newProfileName.toLowerCase().trim(),
       avatar: newProfileEmoji,
       currentLevel: 1,
@@ -565,14 +895,21 @@ const MathBoost = () => {
       }
     };
 
-    setUsers(prev => ({ ...prev, [userId]: newUser }));
-    setCurrentUser(userId);
-    setShowCreateProfile(false);
-    setShowUserSelection(false);
-    setNewProfileName('');
-    setNewProfileEmoji('👤');
+    // Save to Supabase
+    const success = await saveUserProfile(newUser);
     
-    scheduleUserNotifications(newUser);
+    if (success) {
+      console.log('createNewProfile: Profile created successfully', { profileId });
+      setCurrentUser(profileId);
+      setShowCreateProfile(false);
+      setShowUserSelection(false);
+      setNewProfileName('');
+      setNewProfileEmoji('👤');
+      
+      scheduleUserNotifications(newUser);
+    } else {
+      console.error('createNewProfile: Failed to create profile');
+    }
   };
 
   // Sistema de notificaciones por usuario mejorado
@@ -695,6 +1032,75 @@ const MathBoost = () => {
     const newUser = users[userId];
     if (newUser) {
       scheduleUserNotifications(newUser);
+    }
+  };
+
+  // Update user stats after game session
+  const updateUserStats = async (sessionStats) => {
+    if (!user || !session?.user) return;
+
+    const updatedUser = {
+      ...user,
+      totalProblemsLifetime: user.totalProblemsLifetime + sessionStats.total,
+      totalProblemsThisWeek: user.totalProblemsThisWeek + sessionStats.total,
+      sessionsThisWeek: user.sessionsThisWeek + 1,
+      totalHoursInvested: user.totalHoursInvested + (sessionStats.sessionDuration / 3600), // Convert seconds to hours
+      averageResponseTime: user.averageResponseTime > 0 
+        ? ((user.averageResponseTime * user.totalProblemsLifetime) + (sessionStats.averageTime * sessionStats.total)) / (user.totalProblemsLifetime + sessionStats.total)
+        : sessionStats.averageTime
+    };
+
+    // Update streak logic
+    const today = new Date().toDateString();
+    const lastSessionDate = user.lastSessionDate;
+    
+    if (lastSessionDate === today) {
+      // Already practiced today, no streak change
+    } else if (lastSessionDate === new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString()) {
+      // Consecutive day
+      updatedUser.currentStreak = user.currentStreak + 1;
+      updatedUser.consecutiveDays = user.consecutiveDays + 1;
+      if (updatedUser.currentStreak > user.bestStreak) {
+        updatedUser.bestStreak = updatedUser.currentStreak;
+      }
+    } else {
+      // Break in streak
+      updatedUser.currentStreak = 1;
+      updatedUser.consecutiveDays = 1;
+    }
+
+    updatedUser.lastSessionDate = today;
+
+    // Save to Supabase
+    await saveUserProfile(updatedUser);
+  };
+
+  // Save game session to Supabase
+  const saveGameSession = async (sessionStats) => {
+    if (!user || !session?.user) return;
+
+    try {
+      const { error } = await supabase
+        .from('game_sessions')
+        .insert({
+          user_id: session.user.id,
+          profile_id: currentUser,
+          session_type: gameMode === 'tricksPlay' ? 'tricks' : 'regular',
+          operation: operation,
+          selected_tables: selectedTables,
+          number_range: numberRange,
+          correct_answers: sessionStats.correct,
+          total_answers: sessionStats.total,
+          average_time: sessionStats.averageTime / 1000, // Convert to seconds
+          session_duration: sessionStats.sessionDuration,
+          errors: sessionStats.errors
+        });
+
+      if (error) {
+        console.error('Error saving game session:', error);
+      }
+    } catch (error) {
+      console.error('Error saving game session:', error);
     }
   };
 
@@ -962,6 +1368,623 @@ const MathBoost = () => {
     </div>
   );
 
+  // Leaderboard Screen
+  const LeaderboardScreen = () => {
+    const getRankEmoji = (rank) => {
+      if (rank === 1) return '🥇';
+      if (rank === 2) return '🥈';
+      if (rank === 3) return '🥉';
+      if (rank <= 10) return '🏆';
+      if (rank <= 50) return '⭐';
+      return '👤';
+    };
+
+    const getLevelName = (level) => {
+      const levelData = levelSystem[level - 1];
+      return levelData ? levelData.name : `Nivel ${level}`;
+    };
+
+    return (
+      <div style={{ backgroundColor: colors.background }} className={`${screenSize === 'mobile' ? 'h-screen flex flex-col' : 'min-h-screen pt-24'}`}>
+        {screenSize === 'mobile' ? (
+          // Mobile-optimized layout - no scroll, fits viewport
+          <div className="flex-1 flex flex-col justify-center px-4">
+            <div className="max-w-4xl w-full">
+              {/* Compact Header */}
+              <div className="text-center mb-6">
+                <h1 
+                  className={`${getTypeSize('h1', screenSize)} font-light tracking-wider bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent`} 
+                  style={{ fontFamily: 'Inter, -apple-system, sans-serif' }}
+                >
+                  mathboost
+                </h1>
+              </div>
+
+              {/* Compact Subtitle */}
+              <div className="text-center mb-6">
+                <p 
+                  className={`${getTypeSize('body', screenSize)} font-light`}
+                  style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
+                >
+                  Clasificación global de genios matemáticos
+                </p>
+              </div>
+
+              {/* Compact Title */}
+              <div className="text-center mb-6">
+                <h2 
+                  className={`${getTypeSize('h2', screenSize)} font-medium`}
+                  style={{ color: colors.text, fontFamily: 'Inter, -apple-system, sans-serif' }}
+                >
+                  🧠 Math Genius Rankings
+                </h2>
+              </div>
+
+              {/* Main Content Card */}
+              <div 
+                className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-102 active:scale-98 mb-6`}
+                style={{
+                  ...liquidGlass,
+                  padding: r.cardPadding
+                }}
+                onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
+                onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
+              >
+                {leaderboardLoading ? (
+                  <div className="text-center py-8">
+                    <div className="text-4xl mb-4 animate-spin">🧮</div>
+                    <div className={`${getTypeSize('body', screenSize)}`} style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}>
+                      Cargando clasificación...
+                    </div>
+                  </div>
+                ) : leaderboard.length === 0 ? (
+                  <div className="text-center py-6">
+                    <div className="text-5xl mb-4 animate-bounce">🚀</div>
+                    <div className={`${getTypeSize('h3', screenSize)} font-medium mb-2`} style={{ color: colors.text, fontFamily: 'Inter, -apple-system, sans-serif' }}>
+                      ¡Sé el primer genio!
+                    </div>
+                    <div className={`${getTypeSize('body', screenSize)} mb-4`} style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}>
+                      Demuestra tu velocidad mental
+                    </div>
+                    <button
+                      onClick={() => setGameMode('auth')}
+                      className={`group w-full px-6 py-3 ${getTypeSize('button', screenSize)} font-medium rounded-2xl transition-all duration-500 hover:scale-102 active:scale-98 min-h-[44px]`}
+                      style={{
+                        background: `linear-gradient(135deg, ${colors.primaryLight}, ${colors.secondaryLight})`,
+                        color: colors.text,
+                        fontFamily: 'Inter, -apple-system, sans-serif',
+                        border: `2px solid ${colors.primary}20`,
+                        ...liquidGlass
+                      }}
+                      onMouseEnter={(e) => Object.assign(e.target.style, { ...liquidGlassHover, background: `linear-gradient(135deg, ${colors.primaryLight}, ${colors.secondaryLight})` })}
+                      onMouseLeave={(e) => Object.assign(e.target.style, { ...liquidGlass, background: `linear-gradient(135deg, ${colors.primaryLight}, ${colors.secondaryLight})` })}
+                    >
+                      <span className="group-hover:scale-110 transition-transform duration-300 inline-block">⚡</span>
+                      <span className="ml-2">Ser el Primero</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {leaderboard.slice(0, 3).map((user, index) => (
+                      <div 
+                        key={user.profile_id}
+                        className="p-4 rounded-2xl transition-all duration-500 hover:scale-102 active:scale-98"
+                        style={{
+                          backgroundColor: index < 3 ? colors.accentActive : colors.surface,
+                          border: `1px solid ${index < 3 ? colors.primary : colors.border}`,
+                          ...liquidGlass,
+                          animation: `fadeInUp 0.6s ease-out ${index * 0.1}s both`
+                        }}
+                        onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
+                        onMouseLeave={(e) => Object.assign(e.target.style, { ...liquidGlass, backgroundColor: index < 3 ? colors.accentActive : colors.surface })}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
+                              <div className="text-2xl">
+                                {getRankEmoji(user.global_ranking)}
+                              </div>
+                              <div className="text-lg font-bold" style={{ color: colors.text, fontFamily: 'Georgia, serif' }}>
+                                #{user.global_ranking}
+                              </div>
+                            </div>
+                            
+                            <div className="text-2xl transition-transform duration-300 hover:scale-110">
+                              {user.avatar_emoji}
+                            </div>
+                            
+                            <div>
+                              <div className={`${getTypeSize('cardTitle', screenSize)} font-medium capitalize`} style={{ color: colors.text, fontFamily: 'Inter, -apple-system, sans-serif' }}>
+                                {user.profile_name}
+                              </div>
+                              <div className={`${getTypeSize('caption', screenSize)}`} style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}>
+                                {getLevelName(user.current_level)}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="text-right">
+                            <div className="text-lg font-bold" style={{ color: colors.text, fontFamily: 'Georgia, serif' }}>
+                              {user.total_problems_lifetime.toLocaleString()}
+                            </div>
+                            <div className={`${getTypeSize('caption', screenSize)}`} style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}>
+                              problemas
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Compact CTA */}
+              <div className="text-center">
+                <div className={`${getTypeSize('h3', screenSize)} font-medium mb-2`} style={{ color: colors.text, fontFamily: 'Inter, -apple-system, sans-serif' }}>
+                  ¡Únete a la élite!
+                </div>
+                <p 
+                  className={`${getTypeSize('body', screenSize)} font-light mb-4`}
+                  style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
+                >
+                  Compite • Mejora • Domina
+                </p>
+                
+                {session ? (
+                  <button
+                    onClick={() => setGameMode('setup')}
+                    className="group w-full px-6 py-3 text-base font-medium rounded-2xl transition-all duration-500 hover:scale-102 active:scale-98 min-h-[44px]"
+                    style={{
+                      background: `linear-gradient(135deg, ${colors.primaryLight}, ${colors.secondaryLight})`,
+                      color: colors.text,
+                      fontFamily: 'Inter, -apple-system, sans-serif',
+                      border: `2px solid ${colors.primary}20`,
+                      ...liquidGlass
+                    }}
+                    onMouseEnter={(e) => Object.assign(e.target.style, { ...liquidGlassHover, background: `linear-gradient(135deg, ${colors.primaryLight}, ${colors.secondaryLight})` })}
+                    onMouseLeave={(e) => Object.assign(e.target.style, { ...liquidGlass, background: `linear-gradient(135deg, ${colors.primaryLight}, ${colors.secondaryLight})` })}
+                  >
+                    <span className="group-hover:scale-110 transition-transform duration-300 inline-block">🚀</span>
+                    <span className="ml-2">Comenzar Entrenamiento</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setGameMode('auth')}
+                    className="group w-full px-6 py-3 text-base font-medium rounded-2xl transition-all duration-500 hover:scale-102 active:scale-98 min-h-[44px]"
+                    style={{
+                      background: `linear-gradient(135deg, ${colors.primaryLight}, ${colors.secondaryLight})`,
+                      color: colors.text,
+                      fontFamily: 'Inter, -apple-system, sans-serif',
+                      border: `2px solid ${colors.primary}20`,
+                      ...liquidGlass
+                    }}
+                    onMouseEnter={(e) => Object.assign(e.target.style, { ...liquidGlassHover, background: `linear-gradient(135deg, ${colors.primaryLight}, ${colors.secondaryLight})` })}
+                    onMouseLeave={(e) => Object.assign(e.target.style, { ...liquidGlass, background: `linear-gradient(135deg, ${colors.primaryLight}, ${colors.secondaryLight})` })}
+                  >
+                    <span className="group-hover:scale-110 transition-transform duration-300 inline-block">🏆</span>
+                    <span className="ml-2">Crear Cuenta</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          // Desktop/tablet layout (unchanged)
+          <div className={`${r.padding} max-w-6xl mx-auto`}>
+            {/* Professional Header with Liquid Glass Styling */}
+            <div className="flex justify-between items-center mb-12">
+              <h1 
+                className={`${getTypeSize('h1', screenSize)} font-light tracking-wider bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent`} 
+                style={{ fontFamily: 'Inter, -apple-system, sans-serif' }}
+              >
+                mathboost
+              </h1>
+              
+              <div className="flex gap-4">
+                {session ? (
+                  <button
+                    onClick={() => setGameMode('welcome')}
+                    className="group px-6 py-3 text-base font-medium rounded-2xl transition-all duration-500 hover:scale-102 active:scale-98 min-h-[44px]"
+                    style={{
+                      ...liquidGlass,
+                      color: colors.text,
+                      fontFamily: 'Inter, -apple-system, sans-serif'
+                    }}
+                    onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
+                    onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
+                  >
+                    👤 Mi Perfil
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setGameMode('auth')}
+                      className="group px-6 py-3 text-base font-medium rounded-2xl transition-all duration-500 hover:scale-102 active:scale-98 min-h-[44px]"
+                      style={{
+                        ...liquidGlass,
+                        color: colors.text,
+                        fontFamily: 'Inter, -apple-system, sans-serif'
+                      }}
+                      onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
+                      onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
+                    >
+                      🔑 Login
+                    </button>
+                    <button
+                      onClick={() => setGameMode('auth')}
+                      className="group px-6 py-3 text-base font-medium rounded-2xl transition-all duration-500 hover:scale-102 active:scale-98 min-h-[44px]"
+                      style={{
+                        background: `linear-gradient(135deg, ${colors.primaryLight}, ${colors.secondaryLight})`,
+                        color: colors.text,
+                        fontFamily: 'Inter, -apple-system, sans-serif',
+                        border: `2px solid ${colors.primary}20`,
+                        ...liquidGlass
+                      }}
+                      onMouseEnter={(e) => Object.assign(e.target.style, { ...liquidGlassHover, background: `linear-gradient(135deg, ${colors.primaryLight}, ${colors.secondaryLight})` })}
+                      onMouseLeave={(e) => Object.assign(e.target.style, { ...liquidGlass, background: `linear-gradient(135deg, ${colors.primaryLight}, ${colors.secondaryLight})` })}
+                    >
+                      ⚡ Crear Cuenta
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Enhanced Subtitle with Proper Typography */}
+            <div className="text-center mb-16">
+              <p 
+                className={`${getTypeSize('body', screenSize)} font-light`}
+                style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
+              >
+                Clasificación global de genios matemáticos
+              </p>
+            </div>
+
+            {/* Professional Leaderboard Section */}
+            <div className="mb-16">
+              <h2 
+                className={`${getTypeSize('h2', screenSize)} font-medium mb-12 text-center`}
+                style={{ color: colors.text, fontFamily: 'Inter, -apple-system, sans-serif' }}
+              >
+                🧠 Math Genius Rankings
+              </h2>
+
+              <div 
+                className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-102 active:scale-98`}
+                style={{
+                  ...liquidGlass,
+                  padding: r.cardPadding
+                }}
+                onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
+                onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
+              >
+                {leaderboardLoading ? (
+                  <div className="text-center py-16">
+                    <div className="text-6xl mb-6 animate-spin">🧮</div>
+                    <div className={`${getTypeSize('body', screenSize)}`} style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}>
+                      Cargando clasificación...
+                    </div>
+                  </div>
+                ) : leaderboard.length === 0 ? (
+                  <div className="text-center py-16">
+                    <div className="text-8xl mb-6 animate-bounce">🚀</div>
+                    <div className={`${getTypeSize('h3', screenSize)} font-medium mb-4`} style={{ color: colors.text, fontFamily: 'Inter, -apple-system, sans-serif' }}>
+                      ¡Sé el primer genio en aparecer aquí!
+                    </div>
+                    <div className={`${getTypeSize('body', screenSize)} mb-8`} style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}>
+                      Demuestra tu velocidad mental y alcanza la cima
+                    </div>
+                    <button
+                      onClick={() => setGameMode('auth')}
+                      className="group px-8 py-4 text-base font-medium rounded-2xl transition-all duration-500 hover:scale-102 active:scale-98 min-h-[44px]"
+                      style={{
+                        background: `linear-gradient(135deg, ${colors.primaryLight}, ${colors.secondaryLight})`,
+                        color: colors.text,
+                        fontFamily: 'Inter, -apple-system, sans-serif',
+                        border: `2px solid ${colors.primary}20`,
+                        ...liquidGlass
+                      }}
+                      onMouseEnter={(e) => Object.assign(e.target.style, { ...liquidGlassHover, background: `linear-gradient(135deg, ${colors.primaryLight}, ${colors.secondaryLight})` })}
+                      onMouseLeave={(e) => Object.assign(e.target.style, { ...liquidGlass, background: `linear-gradient(135deg, ${colors.primaryLight}, ${colors.secondaryLight})` })}
+                    >
+                      <span className="group-hover:scale-110 transition-transform duration-300 inline-block">⚡</span>
+                      <span className="ml-2">Ser el Primero</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {leaderboard.map((user, index) => (
+                      <div 
+                        key={user.profile_id}
+                        className="p-8 rounded-2xl transition-all duration-500 hover:scale-102 active:scale-98"
+                        style={{
+                          backgroundColor: index < 3 ? colors.accentActive : colors.surface,
+                          border: `1px solid ${index < 3 ? colors.primary : colors.border}`,
+                          ...liquidGlass,
+                          animation: `fadeInUp 0.6s ease-out ${index * 0.1}s both`
+                        }}
+                        onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
+                        onMouseLeave={(e) => Object.assign(e.target.style, { ...liquidGlass, backgroundColor: index < 3 ? colors.accentActive : colors.surface })}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-6">
+                            <div className="flex items-center gap-4">
+                              <div className="text-4xl">
+                                {getRankEmoji(user.global_ranking)}
+                              </div>
+                              <div className="text-2xl font-bold" style={{ color: colors.text, fontFamily: 'Georgia, serif' }}>
+                                #{user.global_ranking}
+                              </div>
+                            </div>
+                            
+                            <div className="text-4xl transition-transform duration-300 hover:scale-110">
+                              {user.avatar_emoji}
+                            </div>
+                            
+                            <div>
+                              <div className={`${getTypeSize('cardTitle', screenSize)} font-medium capitalize mb-1`} style={{ color: colors.text, fontFamily: 'Inter, -apple-system, sans-serif' }}>
+                                {user.profile_name}
+                              </div>
+                              <div className={`${getTypeSize('caption', screenSize)}`} style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}>
+                                {getLevelName(user.current_level)}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="text-right">
+                            <div className="text-2xl font-bold mb-1" style={{ color: colors.text, fontFamily: 'Georgia, serif' }}>
+                              {user.total_problems_lifetime.toLocaleString()}
+                            </div>
+                            <div className={`${getTypeSize('caption', screenSize)}`} style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}>
+                              problemas
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Professional Call to Action */}
+            <div className="text-center">
+              <div className={`${getTypeSize('h3', screenSize)} font-medium mb-4`} style={{ color: colors.text, fontFamily: 'Inter, -apple-system, sans-serif' }}>
+                ¡Únete a la élite matemática!
+              </div>
+              <p 
+                className={`${getTypeSize('body', screenSize)} font-light mb-8`}
+                style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
+              >
+                Compite • Mejora • Domina
+              </p>
+              
+              {session ? (
+                <button
+                  onClick={() => setGameMode('setup')}
+                  className="group px-10 py-4 text-base font-medium rounded-2xl transition-all duration-500 hover:scale-102 active:scale-98 min-h-[44px]"
+                  style={{
+                    background: `linear-gradient(135deg, ${colors.primaryLight}, ${colors.secondaryLight})`,
+                    color: colors.text,
+                    fontFamily: 'Inter, -apple-system, sans-serif',
+                    border: `2px solid ${colors.primary}20`,
+                    ...liquidGlass
+                  }}
+                  onMouseEnter={(e) => Object.assign(e.target.style, { ...liquidGlassHover, background: `linear-gradient(135deg, ${colors.primaryLight}, ${colors.secondaryLight})` })}
+                  onMouseLeave={(e) => Object.assign(e.target.style, { ...liquidGlass, background: `linear-gradient(135deg, ${colors.primaryLight}, ${colors.secondaryLight})` })}
+                >
+                  <span className="group-hover:scale-110 transition-transform duration-300 inline-block">🚀</span>
+                  <span className="ml-2">Comenzar Entrenamiento</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => setGameMode('auth')}
+                  className="group px-10 py-4 text-base font-medium rounded-2xl transition-all duration-500 hover:scale-102 active:scale-98 min-h-[44px]"
+                  style={{
+                    background: `linear-gradient(135deg, ${colors.primaryLight}, ${colors.secondaryLight})`,
+                    color: colors.text,
+                    fontFamily: 'Inter, -apple-system, sans-serif',
+                    border: `2px solid ${colors.primary}20`,
+                    ...liquidGlass
+                  }}
+                  onMouseEnter={(e) => Object.assign(e.target.style, { ...liquidGlassHover, background: `linear-gradient(135deg, ${colors.primaryLight}, ${colors.secondaryLight})` })}
+                  onMouseLeave={(e) => Object.assign(e.target.style, { ...liquidGlass, background: `linear-gradient(135deg, ${colors.primaryLight}, ${colors.secondaryLight})` })}
+                >
+                  <span className="group-hover:scale-110 transition-transform duration-300 inline-block">🏆</span>
+                  <span className="ml-2">Crear Cuenta</span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Authentication Screen
+  const AuthScreen = () => {
+    const [isSignUp, setIsSignUp] = useState(false);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [authError, setAuthError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleAuth = async (e) => {
+      e.preventDefault();
+      setAuthError('');
+      setIsLoading(true);
+
+      console.log('handleAuth: Starting auth process', { isSignUp, email });
+
+      const result = isSignUp 
+        ? await signUpWithEmail(email, password)
+        : await signInWithEmail(email, password);
+
+      if (!result.success) {
+        console.error('handleAuth: Auth failed', result.error);
+        setAuthError(result.error);
+      } else {
+        console.log('handleAuth: Auth successful', { isSignUp });
+        // After successful auth, check if user has profiles
+        if (isSignUp) {
+          // For new users, always show create profile screen
+          console.log('handleAuth: New user, showing create profile');
+          setShowCreateProfile(true);
+          setShowUserSelection(false);
+        } else {
+          // For existing users, check if they have profiles
+          console.log('handleAuth: Existing user, loading profiles');
+          await loadUserProfiles();
+          const profileCount = Object.keys(users).length;
+          console.log('handleAuth: Profile count', { profileCount });
+          
+          if (profileCount === 0) {
+            // No profiles found, show create profile
+            console.log('handleAuth: No profiles found, showing create profile');
+            setShowCreateProfile(true);
+            setShowUserSelection(false);
+          } else {
+            // Has profiles, show user selection
+            console.log('handleAuth: Profiles found, showing user selection');
+            setShowUserSelection(true);
+          }
+        }
+        setGameMode('welcome'); // This will be overridden by the show states
+      }
+      
+      setIsLoading(false);
+    };
+
+    return (
+      <div style={{ backgroundColor: colors.background }} className="min-h-screen pt-24">
+        <div className={`${r.padding} max-w-md mx-auto`}>
+          <div className="text-center mb-12">
+            <h1 
+              className={`${getTypeSize('h1', screenSize)} font-light tracking-wider mb-8 bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent`} 
+              style={{ fontFamily: 'Inter, -apple-system, sans-serif' }}
+            >
+              mathboost
+            </h1>
+            <p 
+              className={`${getTypeSize('body', screenSize)} font-light`}
+              style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
+            >
+              {isSignUp ? 'Crea tu cuenta para comenzar' : 'Inicia sesión para continuar'}
+            </p>
+          </div>
+
+          <div 
+            className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-102 active:scale-98`}
+            style={{
+              ...liquidGlass,
+              padding: r.cardPadding
+            }}
+          >
+            <form onSubmit={handleAuth} className="space-y-6">
+              <div>
+                <label className={`${getTypeSize('caption', screenSize)} font-medium mb-3 block`} style={{ color: colors.text }}>
+                  Email
+                </label>
+                <div className="relative">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className={`w-full p-4 pl-12 rounded-2xl border ${getTypeSize('body', screenSize)} transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:scale-102`}
+                    style={{ 
+                      backgroundColor: colors.surface,
+                      border: `1px solid ${colors.border}`,
+                      color: colors.text,
+                      fontFamily: 'Inter, -apple-system, sans-serif'
+                    }}
+                    placeholder="tu@email.com"
+                  />
+                  <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-lg">
+                    🧮
+                  </div>
+                </div>
+                <div className={`${getTypeSize('caption', screenSize)} mt-2`} style={{ color: colors.textSecondary }}>
+                  Usaremos este email para tu cuenta de MathBoost
+                </div>
+              </div>
+
+              <div>
+                <label className={`${getTypeSize('caption', screenSize)} font-medium mb-3 block`} style={{ color: colors.text }}>
+                  Contraseña
+                </label>
+                <div className="relative">
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    minLength={6}
+                    className={`w-full p-4 pl-12 rounded-2xl border ${getTypeSize('body', screenSize)} transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:scale-102`}
+                    style={{ 
+                      backgroundColor: colors.surface,
+                      border: `1px solid ${colors.border}`,
+                      color: colors.text,
+                      fontFamily: 'Inter, -apple-system, sans-serif'
+                    }}
+                    placeholder="••••••••"
+                  />
+                  <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-lg">
+                    🔒
+                  </div>
+                </div>
+                <div className={`${getTypeSize('caption', screenSize)} mt-2`} style={{ color: colors.textSecondary }}>
+                  Mínimo 6 caracteres para tu seguridad
+                </div>
+              </div>
+
+              {authError && (
+                <div className={`${getTypeSize('caption', screenSize)} p-4 rounded-2xl transition-all duration-300`} style={{ 
+                  backgroundColor: colors.error,
+                  color: colors.errorText,
+                  border: `1px solid ${colors.errorText}20`,
+                  fontFamily: 'Inter, -apple-system, sans-serif'
+                }}>
+                  {authError}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className={`group w-full py-4 ${getTypeSize('button', screenSize)} font-medium rounded-2xl transition-all duration-500 hover:scale-102 active:scale-98 disabled:opacity-50 shadow-lg hover:shadow-xl`}
+                style={{
+                  background: `linear-gradient(135deg, ${colors.primaryLight}, ${colors.secondaryLight})`,
+                  color: colors.text,
+                  fontFamily: 'Inter, -apple-system, sans-serif',
+                  border: `2px solid ${colors.primary}20`,
+                  ...liquidGlass
+                }}
+              >
+                <span className="group-hover:scale-110 transition-transform duration-300 inline-block">
+                  {isLoading ? '⏳' : (isSignUp ? '🚀' : '🔑')}
+                </span>
+                <span className="ml-2">
+                  {isLoading ? 'Cargando...' : (isSignUp ? 'Crear cuenta' : 'Iniciar sesión')}
+                </span>
+              </button>
+            </form>
+
+            <div className="mt-8 text-center">
+              <button
+                onClick={() => setIsSignUp(!isSignUp)}
+                className={`${getTypeSize('caption', screenSize)} font-medium transition-all duration-300 hover:scale-105 hover:text-blue-600`}
+                style={{ color: colors.primary }}
+              >
+                {isSignUp ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Pantalla de selección de usuario
   const UserSelectionScreen = () => (
     <div style={{ backgroundColor: colors.background }} className="min-h-screen pt-24">
@@ -1043,6 +2066,23 @@ const MathBoost = () => {
             <div className={`${screenSize === 'mobile' ? 'text-2xl' : 'text-3xl'} mb-2`}>➕</div>
             <div>Crear nuevo perfil</div>
           </button>
+
+          <div className="mt-8 flex justify-center gap-4">
+            <button
+              onClick={() => setGameMode('leaderboard')}
+              className={`${getTypeSize('caption', screenSize)} font-medium transition-all duration-300 hover:scale-105`}
+              style={{ color: colors.primary }}
+            >
+              🏆 Ver Clasificación
+            </button>
+            <button
+              onClick={signOut}
+              className={`${getTypeSize('caption', screenSize)} font-medium transition-all duration-300 hover:scale-105`}
+              style={{ color: colors.textSecondary }}
+            >
+              Cerrar sesión
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -1143,7 +2183,15 @@ const MathBoost = () => {
                 Cancelar
               </button>
               <button
-                onClick={createNewProfile}
+                onClick={() => {
+                  console.log('Create profile button clicked', { 
+                    newProfileName, 
+                    newProfileEmoji, 
+                    session: !!session?.user,
+                    sessionUserId: session?.user?.id 
+                  });
+                  createNewProfile();
+                }}
                 disabled={!newProfileName.trim()}
                 className="flex-1 py-3 text-lg font-medium rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50"
                 style={{
@@ -1413,22 +2461,37 @@ const MathBoost = () => {
             
             <button
               onClick={() => setGameMode('setup')}
-              className={`group ${screenSize === 'mobile' ? 'px-8 py-4 text-xl' : 'px-12 py-6 text-2xl'} font-medium rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 mb-4 shadow-2xl bg-white/85 backdrop-blur-xl border border-black/5 hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}
+              className={`group ${screenSize === 'mobile' ? 'px-8 py-4 text-xl' : 'px-12 py-6 text-2xl'} font-medium rounded-3xl transition-all duration-500 hover:scale-102 active:scale-98 mb-4 shadow-2xl`}
               style={{
                 background: `linear-gradient(135deg, ${colors.primaryLight}, ${colors.secondaryLight})`,
                 color: colors.text,
                 fontFamily: 'Inter, -apple-system, sans-serif',
-                border: `2px solid ${colors.primary}20`
+                border: `2px solid ${colors.primary}20`,
+                ...liquidGlass
               }}
             >
               <span className="group-hover:scale-110 transition-transform duration-300 inline-block">🚀</span> comenzar entrenamiento
             </button>
             
-            <div className="flex justify-center">
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => setGameMode('leaderboard')}
+                {...getButtonProps()}
+                className={`group ${screenSize === 'mobile' ? 'px-4 py-2 text-sm' : 'px-6 py-3 text-base'} font-medium rounded-2xl transition-all duration-300 hover:scale-102 active:scale-98`}
+                style={{
+                  ...liquidGlass,
+                  color: colors.primary,
+                  fontFamily: 'Inter, -apple-system, sans-serif'
+                }}
+              >
+                🏆 Clasificación
+              </button>
               <button
                 onClick={() => setShowUserSelection(true)}
-                className={`group ${screenSize === 'mobile' ? 'px-4 py-2 text-sm' : 'px-6 py-3 text-base'} font-medium rounded-2xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}
+                {...getButtonProps()}
+                className={`group ${screenSize === 'mobile' ? 'px-4 py-2 text-sm' : 'px-6 py-3 text-base'} font-medium rounded-2xl transition-all duration-300 hover:scale-102 active:scale-98`}
                 style={{
+                  ...liquidGlass,
                   color: colors.textSecondary,
                   fontFamily: 'Inter, -apple-system, sans-serif'
                 }}
@@ -1655,7 +2718,7 @@ const MathBoost = () => {
             </div>
           </div>
 
-          <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-102 mb-8 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
+          <div {...getCardProps()} className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-102 mb-8`}>
             <h3 className={`${getTypeSize('h3', screenSize)} font-medium mb-8 text-center`} style={{ color: colors.text }}>
               Patrones de actividad
             </h3>
@@ -2267,74 +3330,88 @@ const MathBoost = () => {
   );
 
   // Session Complete Screen
-  const SessionCompleteScreen = () => (
-    <div style={{ backgroundColor: colors.background }} className="min-h-screen pt-24">
-      <NavigationHeader />
-      <div className={`flex items-center justify-center min-h-screen ${r.padding}`}>
-        <div className="max-w-2xl w-full text-center">
-          <div className="text-6xl mb-6">🎉</div>
-          <h1 
-            className="text-3xl font-light mb-8" 
-            style={{ color: colors.text, fontFamily: 'Inter, -apple-system, sans-serif' }}
-          >
-            ¡Sesión completada!
-          </h1>
-          
-          <div className={`${r.cardPadding} rounded-3xl mb-8 transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="text-center">
-                <div className="text-3xl font-light mb-2" style={{ color: colors.text, fontFamily: 'Georgia, serif' }}>
-                  {stats.correct}
+  const SessionCompleteScreen = () => {
+    // Save stats to Supabase when component mounts
+    useEffect(() => {
+      if (stats.total > 0 && user) {
+        updateUserStats(stats);
+        saveGameSession(stats);
+      }
+    }, []);
+
+    return (
+      <div style={{ backgroundColor: colors.background }} className="min-h-screen pt-24">
+        <NavigationHeader />
+        <div className={`flex items-center justify-center min-h-screen ${r.padding}`}>
+          <div className="max-w-2xl w-full text-center">
+            <div className="text-6xl mb-6">🎉</div>
+            <h1 
+              className="text-3xl font-light mb-8" 
+              style={{ color: colors.text, fontFamily: 'Inter, -apple-system, sans-serif' }}
+            >
+              ¡Sesión completada!
+            </h1>
+            
+            <div className={`${r.cardPadding} rounded-3xl mb-8 transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="text-center">
+                  <div className="text-3xl font-light mb-2" style={{ color: colors.text, fontFamily: 'Georgia, serif' }}>
+                    {stats.correct}
+                  </div>
+                  <div className="text-sm" style={{ color: colors.textSecondary }}>correctas</div>
                 </div>
-                <div className="text-sm" style={{ color: colors.textSecondary }}>correctas</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-light mb-2" style={{ color: colors.text, fontFamily: 'Georgia, serif' }}>
-                  {stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0}%
+                <div className="text-center">
+                  <div className="text-3xl font-light mb-2" style={{ color: colors.text, fontFamily: 'Georgia, serif' }}>
+                    {stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0}%
+                  </div>
+                  <div className="text-sm" style={{ color: colors.textSecondary }}>precisión</div>
                 </div>
-                <div className="text-sm" style={{ color: colors.textSecondary }}>precisión</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-light mb-2" style={{ color: colors.text, fontFamily: 'Georgia, serif' }}>
-                  {stats.total > 0 ? formatTime(stats.averageTime) : '0'}s
+                <div className="text-center">
+                  <div className="text-3xl font-light mb-2" style={{ color: colors.text, fontFamily: 'Georgia, serif' }}>
+                    {stats.total > 0 ? formatTime(stats.averageTime) : '0'}s
+                  </div>
+                  <div className="text-sm" style={{ color: colors.textSecondary }}>velocidad</div>
                 </div>
-                <div className="text-sm" style={{ color: colors.textSecondary }}>velocidad</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-light mb-2" style={{ color: colors.text, fontFamily: 'Georgia, serif' }}>
-                  5:00
+                <div className="text-center">
+                  <div className="text-3xl font-light mb-2" style={{ color: colors.text, fontFamily: 'Georgia, serif' }}>
+                    5:00
+                  </div>
+                  <div className="text-sm" style={{ color: colors.textSecondary }}>duración</div>
                 </div>
-                <div className="text-sm" style={{ color: colors.textSecondary }}>duración</div>
               </div>
             </div>
-          </div>
 
-          <div className="flex gap-4 justify-center">
-            <button
-              onClick={() => setGameMode('setup')}
-              className="px-8 py-3 text-lg font-medium rounded-2xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
-              style={{
-                color: colors.text,
-                fontFamily: 'Inter, -apple-system, sans-serif'
-              }}
-            >
-              Otra sesión
-            </button>
-            <button
-              onClick={() => setGameMode('welcome')}
-              className="px-8 py-3 text-lg font-medium rounded-2xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20"
-              style={{
-                color: colors.text,
-                fontFamily: 'Inter, -apple-system, sans-serif'
-              }}
-            >
-              Ir al inicio
-            </button>
+            <div className="flex gap-4 justify-center">
+              <button
+                onClick={() => setGameMode('setup')}
+                {...getButtonProps()}
+                className="px-8 py-3 text-lg font-medium rounded-2xl transition-all duration-300 hover:scale-102 active:scale-98"
+                style={{
+                  ...liquidGlass,
+                  color: colors.text,
+                  fontFamily: 'Inter, -apple-system, sans-serif'
+                }}
+              >
+                Otra sesión
+              </button>
+              <button
+                onClick={() => setGameMode('welcome')}
+                {...getButtonProps()}
+                className="px-8 py-3 text-lg font-medium rounded-2xl transition-all duration-300 hover:scale-102 active:scale-98"
+                style={{
+                  ...liquidGlass,
+                  color: colors.text,
+                  fontFamily: 'Inter, -apple-system, sans-serif'
+                }}
+              >
+                Ir al inicio
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Tricks Play Screen
   const TricksPlayScreen = () => {
@@ -2460,7 +3537,7 @@ const MathBoost = () => {
             </div>
 
             {/* Profile Card - Compact on mobile */}
-            <div className={`${screenSize === 'mobile' ? 'p-4 mb-6' : r.cardPadding} rounded-3xl ${screenSize === 'mobile' ? 'mb-6' : 'mb-12'} transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
+            <div {...getCardProps()} className={`${screenSize === 'mobile' ? 'p-4 mb-6' : r.cardPadding} rounded-3xl ${screenSize === 'mobile' ? 'mb-6' : 'mb-12'} transition-all duration-500 hover:scale-102 active:scale-98`}>
               <div className={`flex items-center ${screenSize === 'mobile' ? 'gap-3' : 'gap-4'} ${screenSize === 'mobile' ? 'mb-4' : 'mb-6'}`}>
                 <div className={`${screenSize === 'mobile' ? 'text-2xl' : 'text-3xl'}`}>{user.avatar}</div>
                 <div>
@@ -2483,9 +3560,9 @@ const MathBoost = () => {
             </div>
 
             {/* Weekly Evolution - Restored from WelcomeScreen */}
-            <div className={`${screenSize === 'mobile' ? 'p-4 mb-6' : r.cardPadding} rounded-3xl ${screenSize === 'mobile' ? 'mb-6' : 'mb-12'} transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
+            <div {...getCardProps()} className={`${screenSize === 'mobile' ? 'p-4 mb-6' : r.cardPadding} rounded-3xl ${screenSize === 'mobile' ? 'mb-6' : 'mb-12'} transition-all duration-500 hover:scale-102 active:scale-98`}>
               <div className={`grid ${screenSize === 'mobile' ? 'grid-cols-1 gap-4' : 'grid-cols-2 gap-6'}`}>
-                <div className={`${screenSize === 'mobile' ? 'p-3' : 'p-4'} rounded-2xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
+                <div {...getCardProps()} className={`${screenSize === 'mobile' ? 'p-3' : 'p-4'} rounded-2xl transition-all duration-500 hover:scale-102 active:scale-98`}>
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="text-2xl group-hover:scale-110 transition-transform duration-300">📊</div>
@@ -2518,7 +3595,7 @@ const MathBoost = () => {
                   </p>
                 </div>
 
-                <div className={`${screenSize === 'mobile' ? 'p-3' : 'p-4'} rounded-2xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
+                <div {...getCardProps()} className={`${screenSize === 'mobile' ? 'p-3' : 'p-4'} rounded-2xl transition-all duration-500 hover:scale-102 active:scale-98`}>
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="text-2xl group-hover:scale-110 transition-transform duration-300">⚡</div>
@@ -2560,7 +3637,7 @@ const MathBoost = () => {
             </div>
 
             {/* Level System - Carousel on mobile with timeline */}
-            <div className={`${screenSize === 'mobile' ? 'p-4 mb-6' : r.cardPadding} rounded-3xl ${screenSize === 'mobile' ? 'mb-6' : 'mb-12'} transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
+            <div {...getCardProps()} className={`${screenSize === 'mobile' ? 'p-4 mb-6' : r.cardPadding} rounded-3xl ${screenSize === 'mobile' ? 'mb-6' : 'mb-12'} transition-all duration-500 hover:scale-102 active:scale-98`}>
               <h3 className={`${getTypeSize('h3', screenSize)} font-medium ${screenSize === 'mobile' ? 'mb-4' : 'mb-8'} text-center`} style={{ color: colors.text }}>
                 Sistema de progresión
               </h3>
@@ -2620,8 +3697,10 @@ const MathBoost = () => {
                   <div className="text-center">
                     <button
                       onClick={() => setShowFullLevelSystem(true)}
-                      className={`${screenSize === 'mobile' ? 'px-4 py-2' : 'px-6 py-2'} ${getTypeSize('button', screenSize)} font-medium rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}
+                      {...getButtonProps()}
+                      className={`${screenSize === 'mobile' ? 'px-4 py-2' : 'px-6 py-2'} ${getTypeSize('button', screenSize)} font-medium rounded-xl transition-all duration-300 hover:scale-102 active:scale-98`}
                       style={{
+                        ...liquidGlass,
                         color: colors.text,
                         fontFamily: 'Inter, -apple-system, sans-serif'
                       }}
@@ -2698,7 +3777,7 @@ const MathBoost = () => {
             </div>
 
             {/* Performance Analysis - Single column on mobile */}
-            <div className={`${screenSize === 'mobile' ? 'p-4 mb-6' : r.cardPadding} rounded-3xl ${screenSize === 'mobile' ? 'mb-6' : 'mb-12'} transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
+            <div {...getCardProps()} className={`${screenSize === 'mobile' ? 'p-4 mb-6' : r.cardPadding} rounded-3xl ${screenSize === 'mobile' ? 'mb-6' : 'mb-12'} transition-all duration-500 hover:scale-102 active:scale-98`}>
               <h3 className={`${getTypeSize('h3', screenSize)} font-medium ${screenSize === 'mobile' ? 'mb-4' : 'mb-8'} text-center`} style={{ color: colors.text }}>
                 Análisis de rendimiento
               </h3>
@@ -2743,7 +3822,7 @@ const MathBoost = () => {
             </div>
 
             {/* Activity Heatmap - Restored from WelcomeScreen */}
-            <div className={`${screenSize === 'mobile' ? 'p-4 mb-6' : r.cardPadding} rounded-3xl ${screenSize === 'mobile' ? 'mb-6' : 'mb-12'} transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
+            <div {...getCardProps()} className={`${screenSize === 'mobile' ? 'p-4 mb-6' : r.cardPadding} rounded-3xl ${screenSize === 'mobile' ? 'mb-6' : 'mb-12'} transition-all duration-500 hover:scale-102 active:scale-98`}>
               <h3 className={`${getTypeSize('h3', screenSize)} font-medium ${screenSize === 'mobile' ? 'mb-4' : 'mb-8'} text-center`} style={{ color: colors.text }}>
                 Patrones de actividad
               </h3>
@@ -2835,7 +3914,7 @@ const MathBoost = () => {
             </div>
 
             {/* Common Mistakes - Compact on mobile */}
-            <div className={`${screenSize === 'mobile' ? 'p-4 mb-6' : r.cardPadding} rounded-3xl ${screenSize === 'mobile' ? 'mb-6' : 'mb-12'} transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
+            <div {...getCardProps()} className={`${screenSize === 'mobile' ? 'p-4 mb-6' : r.cardPadding} rounded-3xl ${screenSize === 'mobile' ? 'mb-6' : 'mb-12'} transition-all duration-500 hover:scale-102 active:scale-98`}>
               <h3 className={`${getTypeSize('h3', screenSize)} font-medium ${screenSize === 'mobile' ? 'mb-4' : 'mb-8'} text-center`} style={{ color: colors.text }}>
                 Errores más comunes
               </h3>
@@ -2893,7 +3972,8 @@ const MathBoost = () => {
           {mathTricks.map((trick) => (
             <div 
               key={trick.id}
-              className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}
+              {...getCardProps()}
+              className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-102 active:scale-98`}
             >
               <div className="text-center mb-6">
                 <div className="text-4xl mb-4">{trick.emoji}</div>
@@ -2959,19 +4039,41 @@ const MathBoost = () => {
   );
 
   // Renderizado principal
+  if (loading) {
+    return (
+      <div style={{ backgroundColor: colors.background }} className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-4 animate-spin">🧮</div>
+          <div className={`${getTypeSize('body', screenSize)}`} style={{ color: colors.textSecondary }}>
+            Cargando MathBoost...
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ backgroundColor: colors.background }} className="min-h-screen">
-      {showUserSelection && <UserSelectionScreen />}
-      {showCreateProfile && <CreateProfileScreen />}
-      {!showUserSelection && !showCreateProfile && (
+      {/* Public screens - no authentication required */}
+      {gameMode === 'leaderboard' && <LeaderboardScreen />}
+      {gameMode === 'auth' && <AuthScreen />}
+      
+      {/* Private screens - authentication required */}
+      {session && (
         <>
-          {gameMode === 'welcome' && <WelcomeScreen />}
-          {gameMode === 'setup' && <SetupScreen />}
-          {gameMode === 'playing' && <GameScreen />}
-          {gameMode === 'sessionComplete' && <SessionCompleteScreen />}
-          {gameMode === 'tricks' && <TricksScreen />}
-          {gameMode === 'tricksPlay' && <TricksPlayScreen />}
-          {gameMode === 'stats' && <StatsScreen />}
+          {showUserSelection && <UserSelectionScreen />}
+          {showCreateProfile && <CreateProfileScreen />}
+          {!showUserSelection && !showCreateProfile && (
+            <>
+              {gameMode === 'welcome' && <WelcomeScreen />}
+              {gameMode === 'setup' && <SetupScreen />}
+              {gameMode === 'playing' && <GameScreen />}
+              {gameMode === 'sessionComplete' && <SessionCompleteScreen />}
+              {gameMode === 'tricks' && <TricksScreen />}
+              {gameMode === 'tricksPlay' && <TricksPlayScreen />}
+              {gameMode === 'stats' && <StatsScreen />}
+            </>
+          )}
         </>
       )}
     </div>
