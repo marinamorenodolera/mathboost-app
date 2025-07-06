@@ -1636,7 +1636,7 @@ const MathBoost = () => {
               </div>
             </div>
 
-            <div className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-105 active:scale-95 bg-white/85 backdrop-blur-xl border border-black/5 shadow-lg hover:bg-white/95 hover:backdrop-blur-2xl hover:shadow-xl hover:border-blue-500/20`}>
+            <div {...getCardProps()} className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-102 active:scale-98`}>
               <div className="text-center">
                 <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">🔮</div>
                 <h4 className={`${getTypeSize('h3', screenSize)} font-medium mb-2`} style={{ color: colors.text }}>
