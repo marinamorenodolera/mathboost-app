@@ -7,25 +7,11 @@ const MathBoost = () => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   
-  // Estados principales
-  const [gameMode, setGameMode] = useState('leaderboard'); // Start with leaderboard
-  const [setupStep, setSetupStep] = useState(1);
-  const [operation, setOperation] = useState('multiplication');
-  const [selectedTables, setSelectedTables] = useState([2, 3, 4, 5]);
-  const [numberRange, setNumberRange] = useState('1-9');
-  const [currentProblem, setCurrentProblem] = useState(null);
-  const [userAnswer, setUserAnswer] = useState('');
-  const [startTime, setStartTime] = useState(null);
-  const [isCorrect, setIsCorrect] = useState(null);
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [selectedTrick, setSelectedTrick] = useState(null);
-  const [sessionStartTime, setSessionStartTime] = useState(null);
-  const [showSparkle, setShowSparkle] = useState(false);
-  const [sessionTimeLimit, setSessionTimeLimit] = useState(300);
-  const [sessionEnded, setSessionEnded] = useState(false);
-  const [showFullLevelSystem, setShowFullLevelSystem] = useState(false);
+  // Estados del componente - organizados por funcionalidad
+  const [users, setUsers] = useState({});
   const [currentUser, setCurrentUser] = useState(null);
-  const [showUserSelection, setShowUserSelection] = useState(true);
+  const [gameMode, setGameMode] = useState('loading');
+  const [showUserSelection, setShowUserSelection] = useState(false);
   const [showCreateProfile, setShowCreateProfile] = useState(false);
   const [newProfileName, setNewProfileName] = useState('');
   const [newProfileEmoji, setNewProfileEmoji] = useState('👤');
@@ -57,8 +43,8 @@ const MathBoost = () => {
   // Sistema de notificaciones por usuario
   const [notificationTimeouts, setNotificationTimeouts] = useState({});
 
-  // Sistema de usuarios mejorado - Now using Supabase
-  const [users, setUsers] = useState({});
+  // Add useRef for the name input
+  const nameInputRef = useRef(null);
 
   // Available emojis for profile creation
   const availableEmojis = [
@@ -905,7 +891,18 @@ const MathBoost = () => {
       return;
     }
     
-    const profileId = newProfileName.toLowerCase().trim();
+    // Check if Supabase is properly configured
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.error('❌ createNewProfile: Supabase not configured', {
+        hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+        hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      });
+      alert('Error de configuración: Supabase no está configurado correctamente.');
+      setIsCreatingProfile(false);
+      return;
+    }
+    
+    const profileId = newProfileName.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
     console.log('✅ createNewProfile: Starting profile creation', { 
       profileId, 
       name: newProfileName,
@@ -988,11 +985,16 @@ const MathBoost = () => {
         scheduleUserNotifications(newUser);
       } else {
         console.error('❌ createNewProfile: Failed to create profile');
-        alert('Error al crear el perfil. Por favor, inténtalo de nuevo.');
+        alert('Error al crear el perfil. Revisa la consola del navegador para más detalles, o verifica que la tabla user_profiles exista en Supabase.');
       }
     } catch (error) {
       console.error('💥 createNewProfile: Exception caught', error);
-      alert(`Error inesperado: ${error.message}`);
+      console.error('💥 Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+      alert(`Error inesperado al crear perfil: ${error.message}. Revisa la consola para más detalles.`);
     } finally {
       setIsCreatingProfile(false);
     }
@@ -2231,11 +2233,20 @@ const MathBoost = () => {
                 Tu nombre
               </h3>
               <input
+                ref={nameInputRef}
                 type="text"
                 value={newProfileName}
                 onChange={(e) => setNewProfileName(e.target.value)}
+                onFocus={() => {
+                  // Ensure input stays focused
+                  setTimeout(() => {
+                    if (nameInputRef.current) {
+                      nameInputRef.current.focus();
+                    }
+                  }, 100);
+                }}
                 placeholder="Escribe tu nombre..."
-                className="w-full p-4 rounded-xl border text-lg"
+                className="w-full p-4 rounded-xl border text-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 style={{ 
                   backgroundColor: colors.surface,
                   border: `1px solid ${colors.border}`,
@@ -2243,6 +2254,9 @@ const MathBoost = () => {
                   fontFamily: 'Inter, -apple-system, sans-serif'
                 }}
                 maxLength={20}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck="false"
               />
             </div>
             
