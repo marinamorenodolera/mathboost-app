@@ -115,23 +115,24 @@ const MathBoost = () => {
           ...profile,
           name: profile.profile_name,
           avatar: profile.avatar_emoji,
-          // Parse JSON fields
-          practiceHeatmap: profile.practice_heatmap || [
+          currentLevel: profile.current_level,
+          // Default values for missing fields in simplified schema
+          practiceHeatmap: [
             [0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0]
           ],
-          activityPatterns: profile.activity_patterns || {
+          activityPatterns: {
             bestDays: [],
             bestHours: [],
             avgSessionLength: '0 min',
             preferredDifficulty: 'Principiante'
           },
-          commonMistakes: profile.common_mistakes || {},
-          strengths: profile.strengths || [],
-          weaknesses: profile.weaknesses || [],
-          notificationPreferences: profile.notification_preferences || {
+          commonMistakes: {},
+          strengths: [],
+          weaknesses: [],
+          notificationPreferences: {
             enabled: true,
             frequency: 'daily',
             bestTime: '18:00',
@@ -380,41 +381,13 @@ const MathBoost = () => {
     });
 
     try {
+      // Simplified profile data for the new schema
       const profileDataToSave = {
         user_id: session.user.id,
         profile_id: profileData.profile_id,
         profile_name: profileData.name,
         avatar_emoji: profileData.avatar,
-        current_level: profileData.currentLevel,
-        sessions_this_week: profileData.sessionsThisWeek,
-        sessions_last_week: profileData.sessionsLastWeek,
-        average_response_time: profileData.averageResponseTime,
-        last_week_response_time: profileData.lastWeekResponseTime,
-        total_problems_this_week: profileData.totalProblemsThisWeek,
-        total_problems_last_week: profileData.totalProblemsLastWeek,
-        total_problems_lifetime: profileData.totalProblemsLifetime,
-        total_hours_invested: profileData.totalHoursInvested,
-        next_level_problems: profileData.nextLevelProblems,
-        current_streak: profileData.currentStreak,
-        best_streak: profileData.bestStreak,
-        consecutive_days: profileData.consecutiveDays,
-        best_table: profileData.bestTable,
-        weakest_table: profileData.weakestTable,
-        average_user_speed: profileData.averageUserSpeed,
-        global_ranking: profileData.globalRanking,
-        common_mistakes: profileData.commonMistakes,
-        strengths: profileData.strengths,
-        weaknesses: profileData.weaknesses,
-        projection_weeks: profileData.projectionWeeks,
-        projection_text: profileData.projectionText,
-        next_achievement: profileData.nextAchievement,
-        practice_heatmap: profileData.practiceHeatmap,
-        activity_patterns: profileData.activityPatterns,
-        personal_profile: profileData.personalProfile,
-        last_notification: profileData.lastNotification,
-        notification_preferences: profileData.notificationPreferences,
-        created_at: profileData.createdAt,
-        updated_at: new Date().toISOString()
+        current_level: profileData.currentLevel || 1
       };
 
       console.log('📤 saveUserProfile: About to send to Supabase', {
