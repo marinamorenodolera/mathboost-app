@@ -29,6 +29,7 @@ const MathBoost = () => {
   const [showCreateProfile, setShowCreateProfile] = useState(false);
   const [newProfileName, setNewProfileName] = useState('');
   const [newProfileEmoji, setNewProfileEmoji] = useState('👤');
+  const [isCreatingProfile, setIsCreatingProfile] = useState(false);
   
   // Leaderboard state
   const [leaderboard, setLeaderboard] = useState([]);
@@ -58,6 +59,15 @@ const MathBoost = () => {
 
   // Sistema de usuarios mejorado - Now using Supabase
   const [users, setUsers] = useState({});
+
+  // Available emojis for profile creation
+  const availableEmojis = [
+    '👤', '👩‍💻', '👨‍💼', '🧑‍🎓', '👩‍🏫', '👨‍🔬', '🧑‍💼', '👩‍🚀', 
+    '👨‍🎨', '🧑‍🍳', '👩‍⚕️', '👨‍🏭', '🧑‍🎤', '👩‍🎯', '👨‍🏫', '🧑‍🔬',
+    '🦸‍♀️', '🦸‍♂️', '🧙‍♀️', '🧙‍♂️', '🧚‍♀️', '🧚‍♂️', '🥷', '🤖',
+    '😀', '😃', '😄', '😁', '😊', '😍', '🤩', '😎', '🤓', '🧐',
+    '🌟', '⚡', '🔥', '💎', '🚀', '🧠', '💪', '🎯', '🏆', '👑'
+  ];
 
   // Usuario actual calculado
   const user = currentUser ? users[currentUser] : null;
@@ -365,15 +375,22 @@ const MathBoost = () => {
 
   // Save user profile to Supabase
   const saveUserProfile = async (profileData) => {
+    console.log('🔧 saveUserProfile: Function called');
+    
     if (!session?.user) {
-      console.error('saveUserProfile: No session user');
+      console.error('❌ saveUserProfile: No session user', { 
+        hasSession: !!session,
+        sessionData: session
+      });
       return false;
     }
 
-    console.log('saveUserProfile: Starting to save profile', { 
+    console.log('✅ saveUserProfile: Starting to save profile', { 
       userId: session.user.id, 
       profileId: profileData.profile_id,
-      profileName: profileData.name 
+      profileName: profileData.name,
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30) + '...',
+      hasSupabaseKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     });
 
     try {
@@ -414,24 +431,45 @@ const MathBoost = () => {
         updated_at: new Date().toISOString()
       };
 
-      console.log('saveUserProfile: Data to save', profileDataToSave);
+      console.log('📤 saveUserProfile: About to send to Supabase', {
+        tableName: 'user_profiles',
+        operation: 'upsert',
+        dataKeys: Object.keys(profileDataToSave),
+        profileDataToSave
+      });
 
       const { data, error } = await supabase
         .from('user_profiles')
         .upsert(profileDataToSave);
 
       if (error) {
-        console.error('saveUserProfile: Supabase error', error);
+        console.error('❌ saveUserProfile: Supabase error', {
+          error,
+          errorMessage: error.message,
+          errorDetails: error.details,
+          errorHint: error.hint,
+          errorCode: error.code
+        });
         return false;
       }
 
-      console.log('saveUserProfile: Profile saved successfully', { data });
+      console.log('✅ saveUserProfile: Profile saved successfully', { 
+        data,
+        dataLength: data?.length,
+        operation: 'upsert completed'
+      });
 
       // Reload profiles after saving
+      console.log('🔄 saveUserProfile: Reloading user profiles...');
       await loadUserProfiles();
+      console.log('✅ saveUserProfile: User profiles reloaded');
       return true;
     } catch (error) {
-      console.error('saveUserProfile: Exception error', error);
+      console.error('💥 saveUserProfile: Exception error', {
+        error,
+        errorMessage: error.message,
+        errorStack: error.stack
+      });
       return false;
     }
   };
@@ -845,84 +883,118 @@ const MathBoost = () => {
 
   // Gestión de usuarios actualizada con Supabase
   const createNewProfile = async () => {
+    console.log('🔧 createNewProfile: Function called');
+    
+    if (isCreatingProfile) {
+      console.log('⏳ createNewProfile: Already creating profile, ignoring duplicate call');
+      return;
+    }
+    
+    setIsCreatingProfile(true);
+    
     if (!newProfileName.trim() || !session?.user) {
-      console.log('createNewProfile: Missing required data', { newProfileName, session: !!session });
+      console.error('❌ createNewProfile: Missing required data', { 
+        newProfileName: newProfileName,
+        newProfileNameTrimmed: newProfileName.trim(),
+        hasSession: !!session,
+        hasSessionUser: !!session?.user,
+        sessionUserId: session?.user?.id
+      });
+      alert('Error: Faltan datos requeridos. Asegúrate de estar autenticado y tener un nombre válido.');
+      setIsCreatingProfile(false);
       return;
     }
     
     const profileId = newProfileName.toLowerCase().trim();
-    console.log('createNewProfile: Creating profile', { profileId, name: newProfileName });
+    console.log('✅ createNewProfile: Starting profile creation', { 
+      profileId, 
+      name: newProfileName,
+      emoji: newProfileEmoji,
+      userId: session.user.id
+    });
     
-    const newUser = {
-      profile_id: profileId,
-      name: newProfileName.toLowerCase().trim(),
-      avatar: newProfileEmoji,
-      currentLevel: 1,
-      sessionsThisWeek: 0,
-      sessionsLastWeek: 0,
-      averageResponseTime: 0,
-      lastWeekResponseTime: 0,
-      totalProblemsThisWeek: 0,
-      totalProblemsLastWeek: 0,
-      totalProblemsLifetime: 0,
-      totalHoursInvested: 0,
-      nextLevelProblems: levelSystem[0].weeklyProblemsMin,
-      currentStreak: 0,
-      bestStreak: 0,
-      consecutiveDays: 0,
-      bestTable: null,
-      weakestTable: null,
-      averageUserSpeed: 0,
-      globalRanking: null,
-      commonMistakes: {},
-      strengths: [],
-      weaknesses: [],
-      projectionWeeks: 12,
-      projectionText: 'calculadora mental básica',
-      nextAchievement: {
-        name: 'Primer Paso',
-        description: 'Completa tu primera sesión de entrenamiento',
-        progress: 0,
-        total: 1,
-        emoji: '🌱'
-      },
-      practiceHeatmap: [
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0]
-      ],
-      activityPatterns: {
-        bestDays: [],
-        bestHours: [],
-        avgSessionLength: '0 min',
-        preferredDifficulty: 'Principiante'
-      },
-      personalProfile: `${newProfileName} está comenzando su viaje en el cálculo mental. Como nuevo usuario, tiene un gran potencial de crecimiento y mejora. ¡Es el momento perfecto para establecer buenos hábitos de práctica y descubrir sus fortalezas naturales en matemáticas!`,
-      lastNotification: null,
-      createdAt: Date.now(),
-      notificationPreferences: {
-        enabled: true,
-        frequency: 'daily',
-        bestTime: '18:00',
-        motivationStyle: 'encouraging'
-      }
-    };
+    try {
+      const newUser = {
+        profile_id: profileId,
+        name: newProfileName.toLowerCase().trim(),
+        avatar: newProfileEmoji,
+        currentLevel: 1,
+        sessionsThisWeek: 0,
+        sessionsLastWeek: 0,
+        averageResponseTime: 0,
+        lastWeekResponseTime: 0,
+        totalProblemsThisWeek: 0,
+        totalProblemsLastWeek: 0,
+        totalProblemsLifetime: 0,
+        totalHoursInvested: 0,
+        nextLevelProblems: levelSystem[0].weeklyProblemsMin,
+        currentStreak: 0,
+        bestStreak: 0,
+        consecutiveDays: 0,
+        bestTable: null,
+        weakestTable: null,
+        averageUserSpeed: 0,
+        globalRanking: null,
+        commonMistakes: {},
+        strengths: [],
+        weaknesses: [],
+        projectionWeeks: 12,
+        projectionText: 'calculadora mental básica',
+        nextAchievement: {
+          name: 'Primer Paso',
+          description: 'Completa tu primera sesión de entrenamiento',
+          progress: 0,
+          total: 1,
+          emoji: '🌱'
+        },
+        practiceHeatmap: [
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0]
+        ],
+        activityPatterns: {
+          bestDays: [],
+          bestHours: [],
+          avgSessionLength: '0 min',
+          preferredDifficulty: 'Principiante'
+        },
+        personalProfile: `${newProfileName} está comenzando su viaje en el cálculo mental. Como nuevo usuario, tiene un gran potencial de crecimiento y mejora. ¡Es el momento perfecto para establecer buenos hábitos de práctica y descubrir sus fortalezas naturales en matemáticas!`,
+        lastNotification: null,
+        createdAt: Date.now(),
+        notificationPreferences: {
+          enabled: true,
+          frequency: 'daily',
+          bestTime: '18:00',
+          motivationStyle: 'encouraging'
+        }
+      };
 
-    // Save to Supabase
-    const success = await saveUserProfile(newUser);
-    
-    if (success) {
-      console.log('createNewProfile: Profile created successfully', { profileId });
-      setCurrentUser(profileId);
-      setShowCreateProfile(false);
-      setShowUserSelection(false);
-      setNewProfileName('');
-      setNewProfileEmoji('👤');
+      console.log('📤 createNewProfile: About to save profile', newUser);
+
+      // Save to Supabase
+      const success = await saveUserProfile(newUser);
       
-      scheduleUserNotifications(newUser);
-    } else {
-      console.error('createNewProfile: Failed to create profile');
+      if (success) {
+        console.log('✅ createNewProfile: Profile created successfully', { profileId });
+        alert(`¡Perfil "${newProfileName}" creado exitosamente!`);
+        setCurrentUser(profileId);
+        setShowCreateProfile(false);
+        setShowUserSelection(false);
+        setNewProfileName('');
+        setNewProfileEmoji('👤');
+        setGameMode('welcome');
+        
+        scheduleUserNotifications(newUser);
+      } else {
+        console.error('❌ createNewProfile: Failed to create profile');
+        alert('Error al crear el perfil. Por favor, inténtalo de nuevo.');
+      }
+    } catch (error) {
+      console.error('💥 createNewProfile: Exception caught', error);
+      alert(`Error inesperado: ${error.message}`);
+    } finally {
+      setIsCreatingProfile(false);
     }
   };
 
@@ -1140,12 +1212,7 @@ const MathBoost = () => {
     };
   }, [currentUser]);
 
-  // Emojis para selección
-  const availableEmojis = [
-    '👤', '👩‍💻', '👨‍💼', '👩‍🎓', '👨‍🎓', '👩‍🔬', '👨‍🔬', '👩‍🏫', '👨‍🏫', '👩‍💼',
-    '🧑‍💻', '👩‍🎨', '👨‍🎨', '👩‍🍳', '👨‍🍳', '👩‍⚕️', '👨‍⚕️', '👩‍🚀', '👨‍🚀', '🤓',
-    '😊', '😎', '🤗', '😄', '😃', '🥳', '🤩', '😇', '🙂', '😉'
-  ];
+  // Emojis para selección (ya declarado arriba)
 
   // Auto-confirmación
   const getExpectedDigits = (answer) => answer.toString().length;
@@ -2198,23 +2265,24 @@ const MathBoost = () => {
               </button>
               <button
                 onClick={() => {
-                  console.log('Create profile button clicked', { 
+                  console.log('🔘 Create profile button clicked', { 
                     newProfileName, 
                     newProfileEmoji, 
                     session: !!session?.user,
-                    sessionUserId: session?.user?.id 
+                    sessionUserId: session?.user?.id,
+                    isCreatingProfile
                   });
                   createNewProfile();
                 }}
-                disabled={!newProfileName.trim()}
+                disabled={!newProfileName.trim() || isCreatingProfile}
                 className="flex-1 py-3 text-lg font-medium rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50"
                 style={{
-                  backgroundColor: colors.primary,
+                  backgroundColor: isCreatingProfile ? colors.textSecondary : colors.primary,
                   color: 'white',
                   fontFamily: 'Inter, -apple-system, sans-serif'
                 }}
               >
-                Crear perfil
+                {isCreatingProfile ? '⏳ Creando perfil...' : 'Crear perfil'}
               </button>
             </div>
           </div>
