@@ -1451,7 +1451,7 @@ const MathBoost = () => {
     </div>
   );
 
-  // Leaderboard Screen
+  // Leaderboard Screen - Modern Landing Page
   const LeaderboardScreen = () => {
     const getRankEmoji = (rank) => {
       if (rank === 1) return '🥇';
@@ -1468,42 +1468,145 @@ const MathBoost = () => {
     };
 
     return (
-      <div style={{ backgroundColor: colors.background }} className={`${screenSize === 'mobile' ? 'h-screen flex flex-col' : 'min-h-screen pt-24'}`}>
-        {screenSize === 'mobile' ? (
-          // Mobile-optimized layout - no scroll, fits viewport
-          <div className="flex-1 flex flex-col justify-center px-4">
-            <div className="max-w-4xl w-full">
-              {/* Compact Header */}
-              <div className="text-center mb-6">
-                <h1 
-                  className={`${getTypeSize('h1', screenSize)} font-light tracking-wider bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent`} 
-                  style={{ fontFamily: 'Inter, -apple-system, sans-serif' }}
+      <div 
+        className="min-h-screen"
+        style={{
+          background: `linear-gradient(135deg, ${colors.background}dd, ${colors.surface}40), 
+                      radial-gradient(circle at 20% 50%, ${colors.primaryLight}15 0%, transparent 50%), 
+                      radial-gradient(circle at 80% 20%, ${colors.secondaryLight}15 0%, transparent 50%)`
+        }}
+      >
+        {/* Navigation Bar */}
+        <nav className="px-6 py-6">
+          <div className="max-w-7xl mx-auto flex justify-between items-center">
+            {/* Logo */}
+            <div className="flex items-center gap-3">
+              <div className="text-2xl">🧮</div>
+              <h1 
+                className="text-2xl font-light tracking-wider bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent" 
+                style={{ fontFamily: 'Inter, -apple-system, sans-serif' }}
+              >
+                mathboost
+              </h1>
+            </div>
+            
+            {/* Navigation Actions */}
+            <div className="flex gap-3">
+              {session ? (
+                <button
+                  onClick={() => setGameMode('welcome')}
+                  className="group px-5 py-2.5 text-sm font-medium rounded-xl transition-all duration-300 hover:scale-105"
+                  style={{
+                    ...liquidGlass,
+                    color: colors.text,
+                    fontFamily: 'Inter, -apple-system, sans-serif'
+                  }}
+                  onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
+                  onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
                 >
-                  mathboost
-                </h1>
-              </div>
+                  👤 Mi Perfil
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setGameMode('auth')}
+                    className="group px-5 py-2.5 text-sm font-medium rounded-xl transition-all duration-300 hover:scale-105"
+                    style={{
+                      ...liquidGlass,
+                      color: colors.text,
+                      fontFamily: 'Inter, -apple-system, sans-serif'
+                    }}
+                    onMouseEnter={(e) => Object.assign(e.target.style, liquidGlassHover)}
+                    onMouseLeave={(e) => Object.assign(e.target.style, liquidGlass)}
+                  >
+                    Iniciar Sesión
+                  </button>
+                  <button
+                    onClick={() => setGameMode('auth')}
+                    className="group px-5 py-2.5 text-sm font-medium rounded-xl transition-all duration-300 hover:scale-105"
+                    style={{
+                      background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
+                      color: 'white',
+                      fontFamily: 'Inter, -apple-system, sans-serif',
+                      border: 'none'
+                    }}
+                  >
+                    Crear Cuenta
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </nav>
 
-              {/* Compact Subtitle */}
-              <div className="text-center mb-6">
-                <p 
-                  className={`${getTypeSize('body', screenSize)} font-light`}
-                  style={{ color: colors.textSecondary, fontFamily: 'Inter, -apple-system, sans-serif' }}
+        {/* Hero Section */}
+        <div className="pt-16 pb-20 px-6">
+          <div className="max-w-6xl mx-auto text-center">
+            {/* Main Headline */}
+            <div className="mb-12">
+              <h2 
+                className={`${screenSize === 'mobile' ? 'text-4xl' : 'text-6xl'} font-light mb-6`}
+                style={{ 
+                  color: colors.text, 
+                  fontFamily: 'Inter, -apple-system, sans-serif',
+                  lineHeight: '1.1'
+                }}
+              >
+                Acelera tu <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-medium">mente matemática</span>
+              </h2>
+              <p 
+                className={`${screenSize === 'mobile' ? 'text-lg' : 'text-xl'} font-light max-w-3xl mx-auto`}
+                style={{ 
+                  color: colors.textSecondary, 
+                  fontFamily: 'Inter, -apple-system, sans-serif',
+                  lineHeight: '1.6'
+                }}
+              >
+                Entrena tu velocidad de cálculo mental y únete a miles de usuarios que mejoran su agilidad matemática cada día
+              </p>
+            </div>
+
+            {/* CTA Button */}
+            <div className="mb-20">
+              {session ? (
+                <button
+                  onClick={() => setGameMode('setup')}
+                  className="group px-8 py-4 text-lg font-medium rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
+                  style={{
+                    background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
+                    color: 'white',
+                    fontFamily: 'Inter, -apple-system, sans-serif',
+                    border: 'none'
+                  }}
                 >
-                  Clasificación global de genios matemáticos
-                </p>
-              </div>
-
-              {/* Compact Title */}
-              <div className="text-center mb-6">
-                <h2 
-                  className={`${getTypeSize('h2', screenSize)} font-medium`}
-                  style={{ color: colors.text, fontFamily: 'Inter, -apple-system, sans-serif' }}
+                  <span className="group-hover:scale-110 transition-transform duration-300 inline-block mr-2">🚀</span>
+                  Comenzar Entrenamiento
+                </button>
+              ) : (
+                <button
+                  onClick={() => setGameMode('auth')}
+                  className="group px-8 py-4 text-lg font-medium rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
+                  style={{
+                    background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
+                    color: 'white',
+                    fontFamily: 'Inter, -apple-system, sans-serif',
+                    border: 'none'
+                  }}
                 >
-                  🧠 Math Genius Rankings
-                </h2>
-              </div>
+                  <span className="group-hover:scale-110 transition-transform duration-300 inline-block mr-2">⚡</span>
+                  Empezar Gratis
+                </button>
+              )}
+            </div>
 
-              {/* Main Content Card */}
+            {/* Leaderboard Section - Compact */}
+            <div className="max-w-4xl mx-auto">
+              <h3 
+                className={`${screenSize === 'mobile' ? 'text-2xl' : 'text-3xl'} font-medium mb-8 text-center`}
+                style={{ color: colors.text, fontFamily: 'Inter, -apple-system, sans-serif' }}
+              >
+                🏆 Rankings de Genios
+              </h3>
               <div 
                 className={`${r.cardPadding} rounded-3xl transition-all duration-500 hover:scale-102 active:scale-98 mb-6`}
                 style={{
