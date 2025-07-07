@@ -83,9 +83,15 @@ const MathBoost = () => {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event, session);
       setSession(session);
       setLoading(false);
+      
+      // Handle email confirmation
+      if (event === 'SIGNED_IN' && session) {
+        console.log('User signed in successfully');
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -453,9 +459,17 @@ const MathBoost = () => {
   // Sign up with email/password
   const signUpWithEmail = async (email, password) => {
     try {
+      // Get the current domain for redirect URL
+      const redirectUrl = typeof window !== 'undefined' 
+        ? `${window.location.origin}` 
+        : 'https://mathboost-app.vercel.app';
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: redirectUrl,
+        }
       });
 
       if (error) {
