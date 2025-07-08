@@ -37,6 +37,7 @@ const MathBoost = () => {
   const [isCreatingProfile, setIsCreatingProfile] = useState(false);
   const [createProfileError, setCreateProfileError] = useState('');
   const [screenSize, setScreenSize] = useState('desktop');
+  // 1. Cambia el estado inicial para el modo de registro
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -124,6 +125,47 @@ const MathBoost = () => {
     }
   };
 
+  // 2. Nueva función para el registro completo
+  const handleFullSignUp = async (e) => {
+    e.preventDefault();
+    setAuthError('');
+    setCreateProfileError('');
+    setIsLoading(true);
+
+    try {
+      // 1. Registro de usuario
+      const result = await signUp(email, password);
+      if (!result.success) {
+        setAuthError(result.error);
+        setIsLoading(false);
+        return;
+      }
+
+      // 2. Crear perfil (usa el user.id y user.email del resultado o de supabase.auth.getUser())
+      const profileResult = await createProfile({
+        name: newProfileName.trim(),    // Se mapea a display_name
+        avatar: newProfileEmoji         // Se mapea a avatar_emoji
+      });
+
+      if (!profileResult.success) {
+        setCreateProfileError(profileResult.error || 'Error creando perfil');
+        setIsLoading(false);
+        return;
+      }
+
+      // 3. Ir al juego
+      setNewProfileName('');
+      setNewProfileEmoji('👤');
+      setEmail('');
+      setPassword('');
+      setGameMode('game');
+    } catch (error) {
+      setAuthError('Error inesperado. Intenta de nuevo.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const layoutStyles = getLayoutStyles(screenSize);
 
   // Loading screen
@@ -149,45 +191,69 @@ const MathBoost = () => {
   );
   }
 
-  // Pantalla de creación de perfil
-  if (showCreateProfile) {
+  // 3. Unifica el formulario de registro y creación de perfil en una sola pantalla
+  if (gameMode === 'auth' && isSignUp) {
     return (
-      <div 
-        style={{ 
-          backgroundColor: theme.colors.background,
-          ...layoutStyles.screen
-        }} 
-        className="flex flex-col"
-      >
+      <div style={{ backgroundColor: theme.colors.background, ...layoutStyles.screen }} className="flex flex-col">
         <main className="flex-1 flex items-center justify-center" style={{ padding: getSpacing('container', screenSize) }}>
           <div className="w-full max-w-md">
             <div className="text-center mb-12">
-              <h1 
-                className={`${getTypeSize('h1', screenSize)} font-light tracking-wider mb-8 bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent`} 
-                style={{ fontFamily: theme.typography.fontFamily }}
-              >
+              <h1 className={`${getTypeSize('h1', screenSize)} font-light tracking-wider mb-8 bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent`} style={{ fontFamily: theme.typography.fontFamily }}>
                 mathboost
               </h1>
-              <p 
-                className={`${getTypeSize('body', screenSize)} font-light`}
-                style={{ color: theme.colors.textSecondary, fontFamily: theme.typography.fontFamily }}
-              >
-                Crea tu perfil para comenzar
+              <p className={`${getTypeSize('body', screenSize)} font-light`} style={{ color: theme.colors.textSecondary, fontFamily: theme.typography.fontFamily }}>
+                Crea tu cuenta y perfil para comenzar
               </p>
             </div>
-
             <Card variant="elevated" screenSize={screenSize} className="p-8">
-              <div className="space-y-8">
+              <form className="space-y-8" onSubmit={handleFullSignUp}>
+                {/* Email */}
                 <div>
-                  <label 
-                    className={`${getTypeSize('caption', screenSize)} font-medium mb-4 block`} 
-                    style={{ color: theme.colors.text, fontFamily: theme.typography.fontFamily }}
-                  >
-                    Nombre del Perfil
+                  <label className={`${getTypeSize('caption', screenSize)} font-medium mb-4 block`} style={{ color: theme.colors.text, fontFamily: theme.typography.fontFamily }}>
+                    Email
                   </label>
                   <div className="relative">
                     <input
-                      ref={nameInputRef}
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      maxLength={50}
+                      className="w-full p-4 pl-12 rounded-2xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:scale-102"
+                      style={getInputStyles(screenSize)}
+                      placeholder="tu@email.com"
+                      disabled={isLoading}
+                    />
+                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-lg">✉️</div>
+                  </div>
+                </div>
+                {/* Password */}
+                <div>
+                  <label className={`${getTypeSize('caption', screenSize)} font-medium mb-4 block`} style={{ color: theme.colors.text, fontFamily: theme.typography.fontFamily }}>
+                    Contraseña
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      maxLength={50}
+                      className="w-full p-4 pl-12 rounded-2xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:scale-102"
+                      style={getInputStyles(screenSize)}
+                      placeholder="Tu contraseña"
+                      disabled={isLoading}
+                    />
+                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-lg">🔑</div>
+                  </div>
+                </div>
+                {/* Display Name */}
+                <div>
+                  <label className={`${getTypeSize('caption', screenSize)} font-medium mb-4 block`} style={{ color: theme.colors.text, fontFamily: theme.typography.fontFamily }}>
+                    Nombre de Perfil
+                  </label>
+                  <div className="relative">
+                    <input
                       type="text"
                       value={newProfileName}
                       onChange={(e) => setNewProfileName(e.target.value)}
@@ -196,25 +262,14 @@ const MathBoost = () => {
                       className="w-full p-4 pl-12 rounded-2xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:scale-102"
                       style={getInputStyles(screenSize)}
                       placeholder="Mi Perfil"
-                      disabled={isCreatingProfile}
+                      disabled={isLoading}
                     />
-                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-lg">
-                      👤
-                    </div>
-                  </div>
-                  <div 
-                    className={`${getTypeSize('caption', screenSize)} mt-3`} 
-                    style={{ color: theme.colors.textSecondary, fontFamily: theme.typography.fontFamily }}
-                  >
-                    Elige un nombre para tu perfil de entrenamiento
+                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-lg">👤</div>
                   </div>
                 </div>
-
+                {/* Emoji Avatar */}
                 <div>
-                  <label 
-                    className={`${getTypeSize('caption', screenSize)} font-medium mb-4 block`} 
-                    style={{ color: theme.colors.text, fontFamily: theme.typography.fontFamily }}
-                  >
+                  <label className={`${getTypeSize('caption', screenSize)} font-medium mb-4 block`} style={{ color: theme.colors.text, fontFamily: theme.typography.fontFamily }}>
                     Avatar
                   </label>
                   <div className="grid grid-cols-8 gap-3">
@@ -232,31 +287,38 @@ const MathBoost = () => {
                         }}
                         aria-label={`Seleccionar avatar ${emoji}`}
                         type="button"
-                        disabled={isCreatingProfile}
+                        disabled={isLoading}
                       >
                         {emoji}
                       </button>
                     ))}
                   </div>
                 </div>
+                {/* Errores */}
+                {authError && (
+                  <div className="mt-4 text-red-600 text-center text-base font-medium bg-red-50 rounded-xl p-3 border border-red-200">
+                    {authError}
+                  </div>
+                )}
                 {createProfileError && (
                   <div className="mt-4 text-red-600 text-center text-base font-medium bg-red-50 rounded-xl p-3 border border-red-200">
                     {createProfileError}
                   </div>
                 )}
+                {/* Botón de submit */}
                 <Button
                   variant="primary"
                   size="lg"
-                  onClick={handleCreateProfile}
-                  disabled={!newProfileName.trim() || isCreatingProfile}
-                  loading={isCreatingProfile}
+                  type="submit"
+                  disabled={!email.trim() || !password.trim() || !newProfileName.trim() || isLoading}
+                  loading={isLoading}
                   icon="🚀"
                   screenSize={screenSize}
                   className="w-full"
                 >
-                  {isCreatingProfile ? 'Creando...' : 'Crear Perfil'}
+                  {isLoading ? 'Creando cuenta...' : 'Crear cuenta y perfil'}
                 </Button>
-              </div>
+              </form>
             </Card>
           </div>
         </main>
@@ -341,123 +403,6 @@ const MathBoost = () => {
                 </p>
               </Card>
             </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  // Pantalla de autenticación
-  if (gameMode === 'auth') {
-    return (
-      <div 
-        style={{ 
-          backgroundColor: theme.colors.background,
-          ...layoutStyles.screen
-        }} 
-        className="flex flex-col"
-      >
-        <main className="flex-1 flex items-center justify-center" style={{ padding: getSpacing('container', screenSize) }}>
-          <div className="w-full max-w-md">
-            <div className="text-center mb-12">
-              <h1 
-                className={`${getTypeSize('h1', screenSize)} font-light tracking-wider mb-8 bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent`} 
-                style={{ fontFamily: theme.typography.fontFamily }}
-              >
-                mathboost
-              </h1>
-              <p 
-                className={`${getTypeSize('body', screenSize)} font-light`}
-                style={{ color: theme.colors.textSecondary, fontFamily: theme.typography.fontFamily }}
-              >
-                {isSignUp ? 'Crea tu cuenta para comenzar' : 'Inicia sesión para continuar'}
-              </p>
-            </div>
-            <Card variant="elevated" screenSize={screenSize} className="p-8">
-              <div className="space-y-8">
-                <div>
-                  <label 
-                    className={`${getTypeSize('caption', screenSize)} font-medium mb-4 block`} 
-                    style={{ color: theme.colors.text, fontFamily: theme.typography.fontFamily }}
-                  >
-                    Email
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      maxLength={50}
-                      className="w-full p-4 pl-12 rounded-2xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:scale-102"
-                      style={getInputStyles(screenSize)}
-                      placeholder="tu@email.com"
-                      disabled={isLoading}
-                    />
-                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-lg">
-                      ✉️
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label 
-                    className={`${getTypeSize('caption', screenSize)} font-medium mb-4 block`} 
-                    style={{ color: theme.colors.text, fontFamily: theme.typography.fontFamily }}
-                  >
-                    Contraseña
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      maxLength={50}
-                      className="w-full p-4 pl-12 rounded-2xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:scale-102"
-                      style={getInputStyles(screenSize)}
-                      placeholder="Tu contraseña"
-                      disabled={isLoading}
-                    />
-                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-lg">
-                      🔑
-                    </div>
-                  </div>
-                </div>
-                {authError && (
-                  <div className="mt-4 text-red-600 text-center text-base font-medium bg-red-50 rounded-xl p-3 border border-red-200">
-                    {authError}
-                  </div>
-                )}
-                <Button
-                  variant="primary"
-                  size="lg"
-                  onClick={handleAuth}
-                  disabled={!email.trim() || !password.trim() || isLoading}
-                  loading={isLoading}
-                  icon={isSignUp ? '🚀' : '🔑'}
-                  screenSize={screenSize}
-                  className="w-full"
-                >
-                  {isLoading ? 'Autenticando...' : (isSignUp ? 'Crear Cuenta' : 'Iniciar Sesión')}
-                </Button>
-                <div className="text-center mt-6">
-                  <p 
-                    className={`${getTypeSize('caption', screenSize)} font-medium`}
-                    style={{ color: theme.colors.textSecondary, fontFamily: theme.typography.fontFamily }}
-                  >
-                    {isSignUp ? '¿Ya tienes cuenta?' : '¿No tienes cuenta?'}
-                    <span 
-                      className={`ml-2 cursor-pointer ${getTypeSize('caption', screenSize)} font-medium text-blue-500 hover:underline`}
-                      style={{ fontFamily: theme.typography.fontFamily }}
-                      onClick={() => setIsSignUp(!isSignUp)}
-                    >
-                      {isSignUp ? 'Inicia Sesión' : 'Regístrate'}
-                    </span>
-                  </p>
-                </div>
-              </div>
-            </Card>
           </div>
         </main>
       </div>
