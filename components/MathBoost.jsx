@@ -8,6 +8,7 @@ import GameScreen from './screens/GameScreen.jsx';
 import StatsScreen from './screens/StatsScreen.jsx';
 import Button from './ui/Button.jsx';
 import Card from './ui/Card.jsx';
+import DebugSupabaseStatus from './DebugSupabaseStatus.jsx';
 
 
 const MathBoost = () => {
@@ -72,27 +73,48 @@ const MathBoost = () => {
     }
   }, [showCreateProfile]);
 
-  // Crear nuevo perfil
+  // Crear nuevo perfil con debugging y timeout
   const handleCreateProfile = async () => {
-    if (!newProfileName.trim()) return;
+    if (!newProfileName.trim()) {
+      setCreateProfileError('El nombre no puede estar vacío');
+      return;
+    }
     setIsCreatingProfile(true);
     setCreateProfileError('');
+    let timeoutId;
+    let finished = false;
+    const start = performance.now();
     try {
-      const result = await createProfile({
+      // Timeout de 10 segundos
+      const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => {
+          if (!finished) {
+            reject(new Error('La operación está tardando demasiado. Intenta de nuevo.'));
+          }
+        }, 10000);
+      });
+      // Llamada real
+      const createPromise = createProfile({
         name: newProfileName.trim(),
         avatar: newProfileEmoji
       });
-      if (result.success) {
+      const result = await Promise.race([createPromise, timeoutPromise]);
+      finished = true;
+      clearTimeout(timeoutId);
+      setIsCreatingProfile(false);
+      if (result && result.success) {
         setNewProfileName('');
         setNewProfileEmoji('👤');
-        setGameMode('welcome'); // Navega automáticamente
+        setCreateProfileError('');
+        setGameMode('game'); // Navegación automática a juego
       } else {
-        setCreateProfileError(result.error || 'Error creando perfil');
+        setCreateProfileError((result && result.error) ? result.error : 'Error creando perfil');
       }
     } catch (error) {
-      setCreateProfileError('Error inesperado. Intenta de nuevo.');
-    } finally {
+      finished = true;
+      clearTimeout(timeoutId);
       setIsCreatingProfile(false);
+      setCreateProfileError(error.message || 'Error inesperado. Intenta de nuevo.');
     }
   };
 
@@ -162,16 +184,16 @@ const MathBoost = () => {
               <h1 
                 className={`${getTypeSize('h1', screenSize)} font-light tracking-wider mb-8 bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent`} 
                 style={{ fontFamily: theme.typography.fontFamily }}
-                >
-                  mathboost
-                </h1>
-                <p 
-                  className={`${getTypeSize('body', screenSize)} font-light`}
+              >
+                mathboost
+              </h1>
+              <p 
+                className={`${getTypeSize('body', screenSize)} font-light`}
                 style={{ color: theme.colors.textSecondary, fontFamily: theme.typography.fontFamily }}
-                >
+              >
                 Crea tu perfil para comenzar
-                </p>
-              </div>
+              </p>
+            </div>
 
             <Card variant="elevated" screenSize={screenSize} className="p-8">
               <div className="space-y-8">
@@ -193,18 +215,19 @@ const MathBoost = () => {
                       className="w-full p-4 pl-12 rounded-2xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:scale-102"
                       style={getInputStyles(screenSize)}
                       placeholder="Mi Perfil"
+                      disabled={isCreatingProfile}
                     />
                     <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-lg">
                       👤
-              </div>
+                    </div>
                   </div>
                   <div 
                     className={`${getTypeSize('caption', screenSize)} mt-3`} 
                     style={{ color: theme.colors.textSecondary, fontFamily: theme.typography.fontFamily }}
                   >
                     Elige un nombre para tu perfil de entrenamiento
-                    </div>
                   </div>
+                </div>
 
                 <div>
                   <label 
@@ -215,26 +238,26 @@ const MathBoost = () => {
                   </label>
                   <div className="grid grid-cols-8 gap-3">
                     {AVAILABLE_EMOJIS.map((emoji) => (
-                    <button
+                      <button
                         key={emoji}
                         onClick={() => setNewProfileEmoji(emoji)}
                         className={`p-3 rounded-xl text-2xl transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-400 ${
                           newProfileEmoji === emoji ? 'ring-2 ring-blue-500 bg-blue-50' : 'bg-white'
                         }`}
                         style={{
-                            border: `2px solid ${newProfileEmoji === emoji ? theme.colors.primary : theme.colors.border}`,
-                            fontSize: '2rem',
-                            lineHeight: 1.2
+                          border: `2px solid ${newProfileEmoji === emoji ? theme.colors.primary : theme.colors.border}`,
+                          fontSize: '2rem',
+                          lineHeight: 1.2
                         }}
                         aria-label={`Seleccionar avatar ${emoji}`}
                         type="button"
+                        disabled={isCreatingProfile}
                       >
                         {emoji}
-                    </button>
+                      </button>
                     ))}
-                              </div>
-                            </div>
-                            
+                  </div>
+                </div>
                 {createProfileError && (
                   <div className="mt-4 text-red-600 text-center text-base font-medium bg-red-50 rounded-xl p-3 border border-red-200">
                     {createProfileError}
@@ -252,11 +275,13 @@ const MathBoost = () => {
                 >
                   {isCreatingProfile ? 'Creando...' : 'Crear Perfil'}
                 </Button>
-                            </div>
+                {/* Debugging temporal: estado Supabase */}
+                <DebugSupabaseStatus />
+              </div>
             </Card>
-                              </div>
+          </div>
         </main>
-                              </div>
+      </div>
     );
   }
 
@@ -355,125 +380,6 @@ const MathBoost = () => {
       >
         <main className="flex-1 flex items-center justify-center" style={{ padding: getSpacing('container', screenSize) }}>
           <div className="w-full max-w-md">
-          <div className="text-center mb-12">
-            <h1 
-              className={`${getTypeSize('h1', screenSize)} font-light tracking-wider mb-8 bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent`} 
-                style={{ fontFamily: theme.typography.fontFamily }}
-            >
-              mathboost
-            </h1>
-            <p 
-              className={`${getTypeSize('body', screenSize)} font-light`}
-                style={{ color: theme.colors.textSecondary, fontFamily: theme.typography.fontFamily }}
-            >
-              {isSignUp ? 'Crea tu cuenta para comenzar' : 'Inicia sesión para continuar'}
-            </p>
-          </div>
-
-            <Card variant="elevated" screenSize={screenSize} className="p-8">
-              <form onSubmit={handleAuth} className="space-y-8">
-              <div>
-                  <label 
-                    className={`${getTypeSize('caption', screenSize)} font-medium mb-4 block`} 
-                    style={{ color: theme.colors.text, fontFamily: theme.typography.fontFamily }}
-                  >
-                  Email
-                </label>
-                <div className="relative">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                      className="w-full p-4 pl-12 rounded-2xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:scale-102"
-                      style={getInputStyles(screenSize)}
-                    placeholder="tu@email.com"
-                  />
-                  <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-lg">
-                    🧮
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                  <label 
-                    className={`${getTypeSize('caption', screenSize)} font-medium mb-4 block`} 
-                    style={{ color: theme.colors.text, fontFamily: theme.typography.fontFamily }}
-                  >
-                  Contraseña
-                </label>
-                <div className="relative">
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={6}
-                      className="w-full p-4 pl-12 rounded-2xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:scale-102"
-                      style={getInputStyles(screenSize)}
-                    placeholder="••••••••"
-                  />
-                  <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-lg">
-                    🔒
-                  </div>
-                </div>
-              </div>
-
-              {authError && (
-                  <div 
-                    className={`${getTypeSize('caption', screenSize)} p-4 rounded-2xl transition-all duration-300`} 
-                    style={{ 
-                      backgroundColor: theme.colors.error,
-                      color: theme.colors.errorText,
-                      border: `1px solid ${theme.colors.errorText}20`,
-                      fontFamily: theme.typography.fontFamily
-                    }}
-                  >
-                  {authError}
-                </div>
-              )}
-
-                <Button
-                type="submit"
-                  variant="primary"
-                  size="lg"
-                  loading={isLoading}
-                  icon={isSignUp ? '🚀' : '🔑'}
-                  screenSize={screenSize}
-                  className="w-full"
-                >
-                  {isLoading ? 'Cargando...' : (isSignUp ? 'Crear cuenta' : 'Iniciar sesión')}
-                </Button>
-            </form>
-
-            <div className="mt-8 text-center">
-              <button
-                onClick={() => setIsSignUp(!isSignUp)}
-                className={`${getTypeSize('caption', screenSize)} font-medium transition-all duration-300 hover:scale-105 hover:text-blue-600`}
-                  style={{ color: theme.colors.primary, fontFamily: theme.typography.fontFamily }}
-              >
-                {isSignUp ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate'}
-              </button>
-            </div>
-            </Card>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  // Pantalla de bienvenida
-  if (gameMode === 'welcome') {
-    return (
-      <div 
-                    style={{ 
-          backgroundColor: theme.colors.background,
-          ...layoutStyles.screen
-        }} 
-        className="flex flex-col"
-      >
-        <main className="flex-1 flex items-center justify-center" style={{ padding: getSpacing('container', screenSize) }}>
-          <div className="w-full max-w-md">
             <div className="text-center mb-12">
               <h1 
                 className={`${getTypeSize('h1', screenSize)} font-light tracking-wider mb-8 bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent`} 
@@ -485,72 +391,107 @@ const MathBoost = () => {
                 className={`${getTypeSize('body', screenSize)} font-light`}
                 style={{ color: theme.colors.textSecondary, fontFamily: theme.typography.fontFamily }}
               >
-                Bienvenido a MathBoost
+                {isSignUp ? 'Crea tu cuenta para comenzar' : 'Inicia sesión para continuar'}
               </p>
-                      </div>
-
+            </div>
             <Card variant="elevated" screenSize={screenSize} className="p-8">
-              <div className="space-y-6">
+              <div className="space-y-8">
+                <div>
+                  <label 
+                    className={`${getTypeSize('caption', screenSize)} font-medium mb-4 block`} 
+                    style={{ color: theme.colors.text, fontFamily: theme.typography.fontFamily }}
+                  >
+                    Email
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      maxLength={50}
+                      className="w-full p-4 pl-12 rounded-2xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:scale-102"
+                      style={getInputStyles(screenSize)}
+                      placeholder="tu@email.com"
+                      disabled={isLoading}
+                    />
+                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-lg">
+                      ✉️
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label 
+                    className={`${getTypeSize('caption', screenSize)} font-medium mb-4 block`} 
+                    style={{ color: theme.colors.text, fontFamily: theme.typography.fontFamily }}
+                  >
+                    Contraseña
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      maxLength={50}
+                      className="w-full p-4 pl-12 rounded-2xl border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:scale-102"
+                      style={getInputStyles(screenSize)}
+                      placeholder="Tu contraseña"
+                      disabled={isLoading}
+                    />
+                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-lg">
+                      🔑
+                    </div>
+                  </div>
+                </div>
+                {authError && (
+                  <div className="mt-4 text-red-600 text-center text-base font-medium bg-red-50 rounded-xl p-3 border border-red-200">
+                    {authError}
+                  </div>
+                )}
                 <Button
                   variant="primary"
                   size="lg"
-                  onClick={() => setGameMode('game')}
-                  icon="🚀"
+                  onClick={handleAuth}
+                  disabled={!email.trim() || !password.trim() || isLoading}
+                  loading={isLoading}
+                  icon={isSignUp ? '🚀' : '🔑'}
                   screenSize={screenSize}
                   className="w-full"
                 >
-                  Comenzar Entrenamiento
+                  {isLoading ? 'Autenticando...' : (isSignUp ? 'Crear Cuenta' : 'Iniciar Sesión')}
                 </Button>
-                
-                <Button
-                  variant="secondary"
-                  size="lg"
-                  onClick={() => setGameMode('leaderboard')}
-                  icon="🏆"
-                  screenSize={screenSize}
-                  className="w-full"
-                >
-                  Ver Rankings
-                </Button>
-                
-                <Button
-                  variant="secondary"
-                  size="lg"
-                  onClick={() => setGameMode('stats')}
-                  icon="📊"
-                  screenSize={screenSize}
-                  className="w-full"
-                >
-                  Mis Estadísticas
-                </Button>
-                
-                <Button
-                  variant="ghost"
-                  size="lg"
-                  onClick={() => setGameMode('auth')}
-                  icon="🔑"
-                  screenSize={screenSize}
-                  className="w-full"
-                >
-                  Iniciar Sesión
-                </Button>
-                
-
-                      </div>
-            </Card>
-                      </div>
-        </main>
+                <div className="text-center mt-6">
+                  <p 
+                    className={`${getTypeSize('caption', screenSize)} font-medium`}
+                    style={{ color: theme.colors.textSecondary, fontFamily: theme.typography.fontFamily }}
+                  >
+                    {isSignUp ? '¿Ya tienes cuenta?' : '¿No tienes cuenta?'}
+                    <span 
+                      className={`ml-2 cursor-pointer ${getTypeSize('caption', screenSize)} font-medium text-blue-500 hover:underline`}
+                      style={{ fontFamily: theme.typography.fontFamily }}
+                      onClick={() => setIsSignUp(!isSignUp)}
+                    >
+                      {isSignUp ? 'Inicia Sesión' : 'Regístrate'}
+                    </span>
+                  </p>
                 </div>
+              </div>
+            </Card>
+          </div>
+        </main>
+      </div>
     );
   }
 
   // Pantalla de juego
   if (gameMode === 'game') {
     return (
-      <GameScreen
+      <GameScreen 
+        currentUser={currentUser}
+        switchUser={switchUser}
         screenSize={screenSize}
-        onBack={() => setGameMode('welcome')}
-        user={user}
       />
     );
   }
@@ -558,31 +499,19 @@ const MathBoost = () => {
   // Pantalla de estadísticas
   if (gameMode === 'stats') {
     return (
-      <StatsScreen
-        screenSize={screenSize}
-        onBack={() => setGameMode('welcome')}
-        user={user}
-      />
-    );
-  }
-
-  // Pantalla de leaderboard (landing)
-  if (gameMode === 'leaderboard') {
-                    return (
-      <LandingScreen
-        session={session}
-        setGameMode={setGameMode}
+      <StatsScreen 
+        currentUser={currentUser}
+        switchUser={switchUser}
         screenSize={screenSize}
       />
     );
   }
 
-  // Pantalla por defecto (landing)
+  // Pantalla de inicio (si no se ha cargado el modo de juego)
   return (
-    <LandingScreen
-      session={session}
-      setGameMode={setGameMode}
+    <LandingScreen 
       screenSize={screenSize}
+      setGameMode={setGameMode}
     />
   );
 };

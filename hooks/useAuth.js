@@ -190,31 +190,77 @@ export const useAuth = () => {
     }
   }, []);
 
-  // Función para crear perfil
+  // Generador de username único
+  const generateUsername = (displayName) => {
+    return (
+      'user_' +
+      displayName.toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 10) +
+      '_' +
+      Math.random().toString(36).substring(2, 8)
+    );
+  };
+
+  // Función para crear perfil (estructura 100% alineada con la tabla real)
   const createProfile = useCallback(async (profileData) => {
     try {
-      console.log('👤 Creating profile:', profileData);
-      
-      const result = await createCustomProfile(profileData);
-      
-      if (result.success) {
-        console.log('✅ Profile created successfully');
-        
-        // Recargar perfiles
-        if (session?.user) {
-          await loadUserProfiles(session.user.id);
-        }
-        
-        return result;
-      } else {
-        console.error('❌ Profile creation failed:', result.error);
-        return result;
+      console.log('👤 [createProfile] Intentando crear perfil (estructura real):', profileData);
+      const { name, avatar } = profileData;
+      if (!session?.user) {
+        return { success: false, error: 'Usuario no autenticado' };
       }
+      if (!session.user.email) {
+        return { success: false, error: 'El usuario no tiene email asociado' };
+      }
+      const user = session.user;
+      const now = new Date().toISOString();
+      const username = `user_${user.id.substring(0, 8)}`;
+      // Intentar insertar SOLO con los campos reales
+      const { data, error: supabaseError } = await supabase
+        .from('user_profiles')
+        .insert([
+          {
+            id: user.id,
+            username,
+            display_name: name.trim(),
+            avatar_emoji: avatar,
+            email: user.email,
+            created_at: now,
+            updated_at: now
+          }
+        ])
+        .select()
+        .single();
+      if (supabaseError) {
+        // Si es error de clave duplicada, hacer update
+        if (supabaseError.code === '23505' || (supabaseError.message && supabaseError.message.includes('duplicate'))) {
+          console.warn('[createProfile] Perfil ya existe, actualizando...');
+          const { data: updated, error: updateError } = await supabase
+            .from('user_profiles')
+            .update({
+              username,
+              display_name: name.trim(),
+              avatar_emoji: avatar,
+              email: user.email,
+              updated_at: now
+            })
+            .eq('id', user.id)
+            .select()
+            .single();
+          if (updateError) {
+            console.error('[createProfile] Error al actualizar perfil:', updateError);
+            return { success: false, error: updateError.message };
+          }
+          return { success: true, profile: updated };
+        }
+        console.error('[createProfile] Error al crear perfil:', supabaseError);
+        return { success: false, error: supabaseError.message };
+      }
+      return { success: true, profile: data };
     } catch (error) {
-      console.error('❌ Unexpected error creating profile:', error);
-      return { success: false, error: 'Error inesperado al crear el perfil.' };
+      console.error('[createProfile] Excepción inesperada:', error);
+      return { success: false, error: error.message || 'Error inesperado al crear el perfil.' };
     }
-  }, [session, loadUserProfiles]);
+  }, [session]);
 
   // Función para cambiar de usuario
   const switchUser = useCallback((profileId) => {
