@@ -72,52 +72,30 @@ const MathBoost = () => {
     }
   }, [showCreateProfile]);
 
-  // Crear nuevo perfil con debugging y timeout
+  // Crear nuevo perfil (versión original)
   const handleCreateProfile = async () => {
-    console.log('🚀 Iniciando handleCreateProfile');
-    if (!newProfileName.trim()) {
-      setCreateProfileError('El nombre no puede estar vacío');
-      return;
-    }
+    if (!newProfileName.trim()) return;
     setIsCreatingProfile(true);
     setCreateProfileError('');
-    let timeoutId;
-    let finished = false;
-    const start = performance.now();
+    
     try {
-      // Timeout de 10 segundos
-      const timeoutPromise = new Promise((_, reject) => {
-        timeoutId = setTimeout(() => {
-          if (!finished) {
-            reject(new Error('La operación está tardando demasiado. Intenta de nuevo.'));
-          }
-        }, 10000);
-      });
-      // Llamada real
-      const result = await Promise.race([createProfile({
+      const result = await createProfile({
         name: newProfileName.trim(),
         avatar: newProfileEmoji
-      }), timeoutPromise]);
-      console.log('📊 Resultado de createProfile:', result);
-      console.log('📊 result.success:', result?.success);
-      finished = true;
-      clearTimeout(timeoutId);
-      setIsCreatingProfile(false);
+      });
+      
       if (result && result.success) {
-        console.log('✅ SUCCESS! Navegando a game...');
         setNewProfileName('');
         setNewProfileEmoji('👤');
         setCreateProfileError('');
-        setGameMode('game'); // Navegación automática a juego
+        setGameMode('game'); // Solo navegar si success
       } else {
-        console.log('❌ FAILED:', result?.error);
-        setCreateProfileError((result && result.error) ? result.error : 'Error creando perfil');
+        setCreateProfileError(result?.error || 'Error creando perfil');
       }
     } catch (error) {
-      finished = true;
-      clearTimeout(timeoutId);
+      setCreateProfileError('Error inesperado');
+    } finally {
       setIsCreatingProfile(false);
-      setCreateProfileError(error.message || 'Error inesperado. Intenta de nuevo.');
     }
   };
 
