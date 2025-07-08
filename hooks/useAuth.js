@@ -203,7 +203,7 @@ export const useAuth = () => {
   // Función para crear perfil (estructura 100% alineada con la tabla real)
   const createProfile = useCallback(async (profileData) => {
     try {
-      console.log('👤 [createProfile] Intentando crear perfil (estructura real):', profileData);
+      console.log('🔍 CreateProfile llamada con:', profileData);
       const { name, avatar } = profileData;
       if (!session?.user) {
         return { success: false, error: 'Usuario no autenticado' };
@@ -212,6 +212,7 @@ export const useAuth = () => {
         return { success: false, error: 'El usuario no tiene email asociado' };
       }
       const user = session.user;
+      console.log('🔍 Usuario actual:', user.id);
       const now = new Date().toISOString();
       const username = `user_${user.id.substring(0, 8)}`;
       // Intentar insertar SOLO con los campos reales
@@ -230,6 +231,7 @@ export const useAuth = () => {
         ])
         .select()
         .single();
+      console.log('🔍 Resultado Supabase:', { data, error: supabaseError });
       if (supabaseError) {
         // Si es error de clave duplicada, hacer update
         if (supabaseError.code === '23505' || (supabaseError.message && supabaseError.message.includes('duplicate'))) {

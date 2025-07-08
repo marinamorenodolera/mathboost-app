@@ -8,7 +8,6 @@ import GameScreen from './screens/GameScreen.jsx';
 import StatsScreen from './screens/StatsScreen.jsx';
 import Button from './ui/Button.jsx';
 import Card from './ui/Card.jsx';
-import DebugSupabaseStatus from './DebugSupabaseStatus.jsx';
 
 
 const MathBoost = () => {
@@ -75,6 +74,7 @@ const MathBoost = () => {
 
   // Crear nuevo perfil con debugging y timeout
   const handleCreateProfile = async () => {
+    console.log('🚀 Iniciando handleCreateProfile');
     if (!newProfileName.trim()) {
       setCreateProfileError('El nombre no puede estar vacío');
       return;
@@ -94,20 +94,23 @@ const MathBoost = () => {
         }, 10000);
       });
       // Llamada real
-      const createPromise = createProfile({
+      const result = await Promise.race([createProfile({
         name: newProfileName.trim(),
         avatar: newProfileEmoji
-      });
-      const result = await Promise.race([createPromise, timeoutPromise]);
+      }), timeoutPromise]);
+      console.log('📊 Resultado de createProfile:', result);
+      console.log('📊 result.success:', result?.success);
       finished = true;
       clearTimeout(timeoutId);
       setIsCreatingProfile(false);
       if (result && result.success) {
+        console.log('✅ SUCCESS! Navegando a game...');
         setNewProfileName('');
         setNewProfileEmoji('👤');
         setCreateProfileError('');
         setGameMode('game'); // Navegación automática a juego
       } else {
+        console.log('❌ FAILED:', result?.error);
         setCreateProfileError((result && result.error) ? result.error : 'Error creando perfil');
       }
     } catch (error) {
@@ -275,8 +278,6 @@ const MathBoost = () => {
                 >
                   {isCreatingProfile ? 'Creando...' : 'Crear Perfil'}
                 </Button>
-                {/* Debugging temporal: estado Supabase */}
-                <DebugSupabaseStatus />
               </div>
             </Card>
           </div>
