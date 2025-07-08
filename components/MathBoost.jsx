@@ -35,6 +35,7 @@ const MathBoost = () => {
   const [newProfileName, setNewProfileName] = useState('');
   const [newProfileEmoji, setNewProfileEmoji] = useState('👤');
   const [isCreatingProfile, setIsCreatingProfile] = useState(false);
+  const [createProfileError, setCreateProfileError] = useState('');
   const [screenSize, setScreenSize] = useState('desktop');
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
@@ -74,21 +75,22 @@ const MathBoost = () => {
   // Crear nuevo perfil
   const handleCreateProfile = async () => {
     if (!newProfileName.trim()) return;
-
     setIsCreatingProfile(true);
+    setCreateProfileError('');
     try {
       const result = await createProfile({
         name: newProfileName.trim(),
         avatar: newProfileEmoji
       });
-
       if (result.success) {
-      setNewProfileName('');
-      setNewProfileEmoji('👤');
-        setGameMode('welcome');
+        setNewProfileName('');
+        setNewProfileEmoji('👤');
+        setGameMode('welcome'); // Navega automáticamente
+      } else {
+        setCreateProfileError(result.error || 'Error creando perfil');
       }
     } catch (error) {
-      console.error('Error creating profile:', error);
+      setCreateProfileError('Error inesperado. Intenta de nuevo.');
     } finally {
       setIsCreatingProfile(false);
     }
@@ -216,13 +218,16 @@ const MathBoost = () => {
                     <button
                         key={emoji}
                         onClick={() => setNewProfileEmoji(emoji)}
-                        className={`p-3 rounded-xl text-xl transition-all duration-300 hover:scale-110 ${
-                          newProfileEmoji === emoji ? 'ring-2 ring-blue-500' : ''
+                        className={`p-3 rounded-xl text-2xl transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+                          newProfileEmoji === emoji ? 'ring-2 ring-blue-500 bg-blue-50' : 'bg-white'
                         }`}
-                      style={{
-                          backgroundColor: newProfileEmoji === emoji ? theme.colors.primaryLight : theme.colors.surface,
-                          border: `1px solid ${newProfileEmoji === emoji ? theme.colors.primary : theme.colors.border}`
+                        style={{
+                            border: `2px solid ${newProfileEmoji === emoji ? theme.colors.primary : theme.colors.border}`,
+                            fontSize: '2rem',
+                            lineHeight: 1.2
                         }}
+                        aria-label={`Seleccionar avatar ${emoji}`}
+                        type="button"
                       >
                         {emoji}
                     </button>
@@ -230,11 +235,16 @@ const MathBoost = () => {
                               </div>
                             </div>
                             
+                {createProfileError && (
+                  <div className="mt-4 text-red-600 text-center text-base font-medium bg-red-50 rounded-xl p-3 border border-red-200">
+                    {createProfileError}
+                  </div>
+                )}
                 <Button
                   variant="primary"
                   size="lg"
                   onClick={handleCreateProfile}
-                  disabled={!newProfileName.trim()}
+                  disabled={!newProfileName.trim() || isCreatingProfile}
                   loading={isCreatingProfile}
                   icon="🚀"
                   screenSize={screenSize}
